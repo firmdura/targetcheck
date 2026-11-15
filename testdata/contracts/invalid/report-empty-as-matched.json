@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "tool": {
+    "version": "0.1.0-dev",
+    "commit": "unknown",
+    "go_version": "go1.27.4"
+  },
+  "target": {
+    "kind": "native",
+    "host_os": "linux",
+    "host_arch": "amd64"
+  },
+  "manifest": {
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "encoding": "raw_json"
+  },
+  "inputs": [
+    {
+      "path": "baseline/main.c",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "size_bytes": 10
+    }
+  ],
+  "tools": [
+    {
+      "role": "build",
+      "path": "/usr/bin/cc",
+      "version": "cc 12.2.0"
+    }
+  ],
+  "variants": [],
+  "declared": [
+    {
+      "name": "baseline",
+      "build_ids": [],
+      "test_ids": [
+        "boundary"
+      ]
+    },
+    {
+      "name": "candidate",
+      "build_ids": [],
+      "test_ids": [
+        "boundary"
+      ]
+    }
+  ],
+  "outcome": "matched"
+}

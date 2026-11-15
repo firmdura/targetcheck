@@ -1,0 +1,229 @@
+{
+  "schema_version": 1,
+  "tool": {
+    "version": "0.1.0-test",
+    "commit": "fixture",
+    "go_version": "go1.27.4"
+  },
+  "target": {
+    "kind": "native",
+    "host_os": "linux",
+    "host_arch": "amd64"
+  },
+  "manifest": {
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "encoding": "raw_json"
+  },
+  "inputs": [
+    {
+      "path": "a-config.h",
+      "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "size_bytes": 10
+    },
+    {
+      "path": "z-test.c",
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "size_bytes": 20
+    }
+  ],
+  "tools": [
+    {
+      "role": "compiler",
+      "path": "/usr/bin/gcc",
+      "version": "gcc 12.2.0"
+    }
+  ],
+  "declared": [
+    {
+      "name": "baseline",
+      "build_ids": [
+        "build-0"
+      ],
+      "test_ids": [
+        "security",
+        "compatibility"
+      ]
+    },
+    {
+      "name": "candidate",
+      "build_ids": [
+        "build-0"
+      ],
+      "test_ids": [
+        "security",
+        "compatibility"
+      ]
+    }
+  ],
+  "variants": [
+    {
+      "name": "baseline",
+      "cwd": "baseline",
+      "build": [
+        {
+          "id": "build-0",
+          "index": 0,
+          "kind": "build",
+          "argv": [
+            "gcc",
+            "test.c",
+            "-o",
+            "parser"
+          ],
+          "cwd": "baseline",
+          "env_names": [
+            "CFLAGS"
+          ],
+          "timeout_seconds": 5,
+          "expectation": {
+            "exit_code": 0
+          },
+          "observation": {
+            "started": true,
+            "argv": [
+              "gcc",
+              "test.c",
+              "-o",
+              "parser"
+            ],
+            "cwd": "baseline",
+            "env_names": [
+              "CFLAGS"
+            ],
+            "exit_code": 2,
+            "stdout": {
+              "bytes": 0,
+              "truncated": false,
+              "log": "logs/baseline-build-0.stdout"
+            },
+            "stderr": {
+              "bytes": 0,
+              "truncated": false,
+              "log": "logs/baseline-build-0.stderr"
+            },
+            "duration_millis": 12
+          },
+          "status": "error",
+          "reason": "build failed"
+        }
+      ],
+      "tests": [
+        {
+          "id": "security",
+          "index": 0,
+          "kind": "test",
+          "argv": [
+            "./parser",
+            "security"
+          ],
+          "cwd": "baseline",
+          "env_names": [
+            "CFLAGS"
+          ],
+          "timeout_seconds": 5,
+          "expectation": {
+            "exit_code": 3,
+            "stderr_contains": "signed overflow"
+          },
+          "status": "not_run",
+          "reason": "not run after infrastructure failure"
+        },
+        {
+          "id": "compatibility",
+          "index": 1,
+          "kind": "test",
+          "argv": [
+            "./parser",
+            "compatibility"
+          ],
+          "cwd": "baseline",
+          "env_names": [
+            "CFLAGS"
+          ],
+          "timeout_seconds": 5,
+          "expectation": {
+            "exit_code": 0
+          },
+          "status": "not_run",
+          "reason": "not run after infrastructure failure"
+        }
+      ],
+      "artifacts_before": [],
+      "artifacts_after": []
+    },
+    {
+      "name": "candidate",
+      "cwd": "candidate",
+      "build": [
+        {
+          "id": "build-0",
+          "index": 0,
+          "kind": "build",
+          "argv": [
+            "gcc",
+            "test.c",
+            "-o",
+            "parser"
+          ],
+          "cwd": "candidate",
+          "env_names": [
+            "CFLAGS"
+          ],
+          "timeout_seconds": 5,
+          "expectation": {
+            "exit_code": 0
+          },
+          "status": "not_run",
+          "reason": "not run after infrastructure failure"
+        }
+      ],
+      "tests": [
+        {
+          "id": "security",
+          "index": 0,
+          "kind": "test",
+          "argv": [
+            "./parser",
+            "security"
+          ],
+          "cwd": "candidate",
+          "env_names": [
+            "CFLAGS"
+          ],
+          "timeout_seconds": 5,
+          "expectation": {
+            "exit_code": 0
+          },
+          "status": "not_run",
+          "reason": "not run after infrastructure failure"
+        },
+        {
+          "id": "compatibility",
+          "index": 1,
+          "kind": "test",
+          "argv": [
+            "./parser",
+            "compatibility"
+          ],
+          "cwd": "candidate",
+          "env_names": [
+            "CFLAGS"
+          ],
+          "timeout_seconds": 5,
+          "expectation": {
+            "exit_code": 0
+          },
+          "status": "not_run",
+          "reason": "not run after infrastructure failure"
+        }
+      ],
+      "artifacts_before": [],
+      "artifacts_after": []
+    }
+  ],
+  "outcome": "error",
+  "failure": {
+    "kind": "build_failure",
+    "message": "baseline build exited 2"
+  }
+}

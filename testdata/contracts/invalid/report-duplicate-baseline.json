@@ -1,0 +1,193 @@
+{
+  "schema_version": 1,
+  "tool": {
+    "version": "0.1.0-dev",
+    "commit": "unknown",
+    "go_version": "go1.27.4"
+  },
+  "target": {
+    "kind": "native",
+    "host_os": "linux",
+    "host_arch": "amd64"
+  },
+  "manifest": {
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "encoding": "raw_json"
+  },
+  "inputs": [
+    {
+      "path": "baseline/main.c",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "size_bytes": 10
+    }
+  ],
+  "tools": [
+    {
+      "role": "build",
+      "path": "/usr/bin/cc",
+      "version": "cc 12.2.0"
+    }
+  ],
+  "variants": [
+    {
+      "name": "baseline",
+      "cwd": "baseline",
+      "build": [],
+      "tests": [
+        {
+          "id": "boundary",
+          "index": 0,
+          "timeout_seconds": 5,
+          "kind": "test",
+          "argv": [
+            "component",
+            "boundary"
+          ],
+          "cwd": "baseline",
+          "env_names": [],
+          "expectation": {
+            "exit_code": 1,
+            "stderr_contains": "boundary assertion"
+          },
+          "observation": {
+            "started": true,
+            "argv": [
+              "component",
+              "boundary"
+            ],
+            "cwd": "baseline",
+            "env_names": [],
+            "exit_code": 1,
+            "stdout": {
+              "bytes": 0,
+              "truncated": false,
+              "log": "logs/baseline-test-0.stdout"
+            },
+            "stderr": {
+              "bytes": 18,
+              "truncated": false,
+              "log": "logs/baseline-test-0.stderr"
+            },
+            "duration_millis": 1
+          },
+          "status": "matched",
+          "reason": "normal exit and required markers matched"
+        }
+      ],
+      "artifacts_before": [
+        {
+          "path": "baseline/component",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "size_bytes": 100,
+          "elf": {
+            "class": "ELF64",
+            "machine": "EM_X86_64",
+            "endian": "little",
+            "abi": "linux-amd64"
+          }
+        }
+      ],
+      "artifacts_after": [
+        {
+          "path": "baseline/component",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "size_bytes": 100,
+          "elf": {
+            "class": "ELF64",
+            "machine": "EM_X86_64",
+            "endian": "little",
+            "abi": "linux-amd64"
+          }
+        }
+      ]
+    },
+    {
+      "name": "baseline",
+      "cwd": "candidate",
+      "build": [],
+      "tests": [
+        {
+          "id": "boundary",
+          "index": 0,
+          "timeout_seconds": 5,
+          "kind": "test",
+          "argv": [
+            "component",
+            "boundary"
+          ],
+          "cwd": "candidate",
+          "env_names": [],
+          "expectation": {
+            "exit_code": 0
+          },
+          "observation": {
+            "started": true,
+            "argv": [
+              "component",
+              "boundary"
+            ],
+            "cwd": "candidate",
+            "env_names": [],
+            "exit_code": 0,
+            "stdout": {
+              "bytes": 0,
+              "truncated": false,
+              "log": "logs/candidate-test-0.stdout"
+            },
+            "stderr": {
+              "bytes": 0,
+              "truncated": false,
+              "log": "logs/candidate-test-0.stderr"
+            },
+            "duration_millis": 1
+          },
+          "status": "matched",
+          "reason": "normal exit and required markers matched"
+        }
+      ],
+      "artifacts_before": [
+        {
+          "path": "candidate/component",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "size_bytes": 100,
+          "elf": {
+            "class": "ELF64",
+            "machine": "EM_X86_64",
+            "endian": "little",
+            "abi": "linux-amd64"
+          }
+        }
+      ],
+      "artifacts_after": [
+        {
+          "path": "candidate/component",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "size_bytes": 100,
+          "elf": {
+            "class": "ELF64",
+            "machine": "EM_X86_64",
+            "endian": "little",
+            "abi": "linux-amd64"
+          }
+        }
+      ]
+    }
+  ],
+  "declared": [
+    {
+      "name": "baseline",
+      "build_ids": [],
+      "test_ids": [
+        "boundary"
+      ]
+    },
+    {
+      "name": "candidate",
+      "build_ids": [],
+      "test_ids": [
+        "boundary"
+      ]
+    }
+  ],
+  "outcome": "matched"
+}

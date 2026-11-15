@@ -1,0 +1,411 @@
+TargetCheck test-only instrumentation: named parse_content_range cases
+
+Status: local TargetCheck addition for the Wget example. It is not an
+upstream GNU Wget change. It is applied first, identically, to every
+variant (unpatched, first-fix and complete), before any fix.
+
+It changes only the TESTING build used by the tests/unit-tests program.
+The wget program and its feature set are unchanged.
+
+  tests/content-range-cases.c (new): named cases that call the
+      production, file-static parse_content_range(), following the
+      upstream MinUnit convention (a test returns NULL or a failure
+      message), with named assertion diagnostics.
+  src/http.c: include that file inside the existing TESTING section, so
+      the cases share the production translation unit.
+  tests/unit-tests.c, tests/unit-tests.h: with command-line arguments,
+      run only the named cases, flushing stdout before each case;
+      without arguments, the upstream test list runs unchanged.
+
+Copyright (C) 2026 TargetCheck contributors.
+License: GPL-3.0-or-later, as a modification of GNU Wget 1.21.4. The
+modified upstream files keep their FSF copyright and GPL notices,
+including the GPL version 3 section 7 additional permission.
+Modified: 2026-11-15. Apply with: patch -p1 --fuzz=0
+
+diff --git a/src/http.c b/src/http.c
+--- a/src/http.c
++++ b/src/http.c
+@@ -5491,6 +5491,9 @@ filename*1=\"B\"", "AA.ext", true },
+   return NULL;
+ }
+ 
++/* TargetCheck test-only addition: cases for parse_content_range.  */
++#include "../tests/content-range-cases.c"
++
+ #endif /* TESTING */
+ 
+ /*
+diff --git a/tests/content-range-cases.c b/tests/content-range-cases.c
+new file mode 100644
+--- /dev/null
++++ b/tests/content-range-cases.c
+@@ -0,0 +1,302 @@
++/* TargetCheck test-only cases for parse_content_range ().
++   Copyright (C) 2026 TargetCheck contributors.
++
++This file is a test-only addition to GNU Wget 1.21.4, written for the
++TargetCheck Wget example (https://github.com/firmdura/targetcheck).
++It is not part of upstream GNU Wget.
++
++This file is free software; you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation; either version 3 of the License, or
++(at your option) any later version.
++
++This file is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with Wget.  If not, see <http://www.gnu.org/licenses/>.  */
++
++/* src/http.c includes this file only when TESTING is defined, so every
++   case calls the file-static production parse_content_range ().  It is
++   not compiled on its own and is not part of the wget program.
++
++   tests/unit-tests.c runs one named case per process, so a sanitizer
++   abort identifies exactly one case.  Output arguments are compared only
++   after a successful parse: a rejected header leaves them unspecified.
++   Failures are reported as named assertions:
++
++     range_accepted  a valid header was rejected
++     range_rejected  an invalid header was accepted
++     range_values    an accepted header produced unexpected positions
++     caller_length   an accepted range makes the caller's
++                     last_byte_pos - first_byte_pos + 1 overflow wgint
++
++   caller_length checks only that first caller computation; see the
++   max_endpoint_caller_boundary comment for one that is not checked.  */
++
++#include <stdarg.h>
++
++struct content_range_case
++{
++  const char *subcase;          /* name used in diagnostics */
++  const char *header;           /* Content-Range header value */
++  bool accept;                  /* expected parse_content_range result */
++  wgint first, last, length;    /* expected outputs when accepted */
++};
++
++/* Written to every output argument before parsing.  */
++#define CONTENT_RANGE_UNSET ((wgint) -2)
++
++static char content_range_message[1024];
++
++/* gethttp () computes last_byte_pos - first_byte_pos + 1 after a
++   successful parse.  Evaluate that expression without undefined
++   behavior, for any values the parser might return.  This is the only
++   caller computation checked here.  */
++static bool
++content_range_caller_overflows (wgint first, wgint last)
++{
++  wgint length;
++
++  return __builtin_sub_overflow (last, first, &length)
++    || __builtin_add_overflow (length, 1, &length);
++}
++
++/* Format a named assertion failure.  DETAIL follows the common prefix.  */
++static const char *content_range_fail (const char *, const char *,
++                                       const struct content_range_case *,
++                                       const char *, ...)
++  __attribute__ ((format (printf, 4, 5)));
++
++static const char *
++content_range_fail (const char *assertion, const char *name,
++                    const struct content_range_case *c, const char *detail,
++                    ...)
++{
++  va_list args;
++  int n;
++
++  n = snprintf (content_range_message, sizeof content_range_message,
++                "content-range assertion %s failed: case=%s subcase=%s "
++                "header=\"%s\": ", assertion, name, c->subcase, c->header);
++  if (n >= 0 && (size_t) n < sizeof content_range_message)
++    {
++      va_start (args, detail);
++      vsnprintf (content_range_message + n,
++                 sizeof content_range_message - n, detail, args);
++      va_end (args);
++    }
++  return content_range_message;
++}
++
++static const char *
++check_content_range_cases (const char *name,
++                           const struct content_range_case *cases,
++                           size_t count)
++{
++  size_t i;
++
++  for (i = 0; i < count; i++)
++    {
++      const struct content_range_case *c = &cases[i];
++      wgint first = CONTENT_RANGE_UNSET;
++      wgint last = CONTENT_RANGE_UNSET;
++      wgint length = CONTENT_RANGE_UNSET;
++      bool accepted = parse_content_range (c->header, &first, &last,
++                                           &length);
++
++      if (!accepted)
++        {
++          if (c->accept)
++            return content_range_fail ("range_accepted", name, c,
++                                       "parser rejected a valid header; "
++                                       "expected first=%lld last=%lld "
++                                       "length=%lld",
++                                       (long long) c->first,
++                                       (long long) c->last,
++                                       (long long) c->length);
++          continue;             /* outputs are unspecified */
++        }
++      if (!c->accept)
++        return content_range_fail ("range_rejected", name, c,
++                                   "parser accepted first=%lld last=%lld "
++                                   "length=%lld%s; expected rejection",
++                                   (long long) first, (long long) last,
++                                   (long long) length,
++                                   content_range_caller_overflows (first,
++                                                                   last)
++                                   ? " (caller length last-first+1 "
++                                     "overflows wgint)" : "");
++      if (first != c->first || last != c->last || length != c->length)
++        return content_range_fail ("range_values", name, c,
++                                   "parser accepted first=%lld last=%lld "
++                                   "length=%lld; expected first=%lld "
++                                   "last=%lld length=%lld",
++                                   (long long) first, (long long) last,
++                                   (long long) length,
++                                   (long long) c->first,
++                                   (long long) c->last,
++                                   (long long) c->length);
++      if (content_range_caller_overflows (first, last))
++        return content_range_fail ("caller_length", name, c,
++                                   "parser accepted first=%lld last=%lld "
++                                   "length=%lld; caller length "
++                                   "last-first+1 overflows wgint",
++                                   (long long) first, (long long) last,
++                                   (long long) length);
++    }
++  return NULL;
++}
++
++#define CONTENT_RANGE_REJECT(subcase, header) \
++  { subcase, header, false, 0, 0, 0 }
++#define CONTENT_RANGE_ACCEPT(subcase, header, first, last, length) \
++  { subcase, header, true, first, last, length }
++
++/* Security: each decimal field one past WGINT_MAX, then far beyond it.  */
++static const struct content_range_case oversized_first_byte_pos[] = {
++  CONTENT_RANGE_REJECT ("one-past-wgint-max", "bytes 9223372036854775808-1/2"),
++  CONTENT_RANGE_REJECT ("thirty-digits",
++                        "bytes 999999999999999999999999999999-1/2"),
++};
++
++static const struct content_range_case oversized_last_byte_pos[] = {
++  CONTENT_RANGE_REJECT ("one-past-wgint-max", "bytes 0-9223372036854775808/*"),
++  CONTENT_RANGE_REJECT ("thirty-digits",
++                        "bytes 0-999999999999999999999999999999/*"),
++};
++
++static const struct content_range_case oversized_entity_length[] = {
++  CONTENT_RANGE_REJECT ("one-past-wgint-max", "bytes 0-1/9223372036854775808"),
++  CONTENT_RANGE_REJECT ("thirty-digits",
++                        "bytes 0-1/999999999999999999999999999999"),
++};
++
++/* Boundary: the caller's range length last_byte_pos - first_byte_pos + 1
++   overflows only for 0-WGINT_MAX, which an unknown ("*") entity length
++   permits.  That is the only caller computation these cases check.
++
++   Not covered (code reading of the pristine 1.21.4 src/http.c only; not
++   exercised by any test): gethttp () later computes
++   hs->contlen = contlen + contrange (line 4071; the same sum at lines
++   4083-4086), which equals last_byte_pos + 1.  For a range from R to
++   WGINT_MAX with an unknown ("*") length, where R is a nonzero resume
++   offset (--start-pos=R or -c), the range check at line 4056 accepts the
++   response and that sum overflows wgint.  one-first-max-last below is
++   such a range for R = 1: its acceptance by the parser does not mean the
++   caller handles it safely.  */
++static const struct content_range_case max_endpoint_caller_boundary[] = {
++  CONTENT_RANGE_REJECT ("zero-first-max-last", "bytes 0-9223372036854775807/*"),
++  CONTENT_RANGE_ACCEPT ("one-first-max-last", "bytes 1-9223372036854775807/*",
++                        1, WGINT_MAX, -1),
++  CONTENT_RANGE_ACCEPT ("zero-first-max-length",
++                        "bytes 0-9223372036854775806/9223372036854775807",
++                        0, WGINT_MAX - 1, WGINT_MAX),
++};
++
++/* Compatibility: offsets that do not fit a 32-bit long.  */
++static const struct content_range_case large_offset_first_byte_pos[] = {
++  CONTENT_RANGE_ACCEPT ("above-2gib", "bytes 2147483648-2147483649/2147483650",
++                        INT64_C (2147483648), INT64_C (2147483649),
++                        INT64_C (2147483650)),
++  CONTENT_RANGE_ACCEPT ("above-4gib", "bytes 4294967296-4294967297/*",
++                        INT64_C (4294967296), INT64_C (4294967297), -1),
++};
++
++static const struct content_range_case large_offset_last_byte_pos[] = {
++  CONTENT_RANGE_ACCEPT ("above-2gib", "bytes 0-2147483648/2147483649",
++                        0, INT64_C (2147483648), INT64_C (2147483649)),
++  CONTENT_RANGE_ACCEPT ("above-4gib", "bytes 0-4294967296/*",
++                        0, INT64_C (4294967296), -1),
++};
++
++static const struct content_range_case large_offset_entity_length[] = {
++  CONTENT_RANGE_ACCEPT ("above-2gib", "bytes 0-1023/2147483648",
++                        0, 1023, INT64_C (2147483648)),
++  CONTENT_RANGE_ACCEPT ("above-4gib", "bytes 0-1023/4294967296",
++                        0, 1023, INT64_C (4294967296)),
++};
++
++static const struct content_range_case max_representable_offsets[] = {
++  CONTENT_RANGE_ACCEPT ("max-entity-length",
++                        "bytes 9223372036854775806-9223372036854775806/"
++                        "9223372036854775807",
++                        WGINT_MAX - 1, WGINT_MAX - 1, WGINT_MAX),
++  CONTENT_RANGE_ACCEPT ("max-single-byte",
++                        "bytes 9223372036854775807-9223372036854775807/*",
++                        WGINT_MAX, WGINT_MAX, -1),
++};
++
++/* Compatibility: syntax accepted by Wget 1.21.4.  */
++static const struct content_range_case historical_syntax[] = {
++  CONTENT_RANGE_ACCEPT ("bytes-unit", "bytes 0-999/1000", 0, 999, 1000),
++  CONTENT_RANGE_ACCEPT ("unknown-length", "bytes 42-1233/*", 42, 1233, -1),
++  CONTENT_RANGE_ACCEPT ("javawebserver-colon", "bytes: 0-999/1000",
++                        0, 999, 1000),
++  CONTENT_RANGE_ACCEPT ("netscape-no-unit", "0-999/1000", 0, 999, 1000),
++  CONTENT_RANGE_ACCEPT ("uppercase-unit", "BYTES 0-0/1", 0, 0, 1),
++  CONTENT_RANGE_ACCEPT ("extra-spaces", "bytes   100-100/101", 100, 100, 101),
++  CONTENT_RANGE_ACCEPT ("leading-zeros", "bytes 007-008/009", 7, 8, 9),
++};
++
++/* Compatibility: input rejected by Wget 1.21.4.  */
++static const struct content_range_case malformed_input[] = {
++  CONTENT_RANGE_REJECT ("empty", ""),
++  CONTENT_RANGE_REJECT ("unit-only", "bytes"),
++  CONTENT_RANGE_REJECT ("unit-and-space", "bytes "),
++  CONTENT_RANGE_REJECT ("unsatisfied-range", "bytes */1000"),
++  CONTENT_RANGE_REJECT ("last-before-first", "bytes 100-99/1000"),
++  CONTENT_RANGE_REJECT ("length-not-after-last", "bytes 0-1000/1000"),
++  CONTENT_RANGE_REJECT ("negative-first", "bytes -1-2/3"),
++  CONTENT_RANGE_REJECT ("non-digit-first", "bytes x-2/3"),
++  CONTENT_RANGE_REJECT ("missing-last", "bytes 1-/3"),
++  CONTENT_RANGE_REJECT ("signed-last", "bytes 1-+2/3"),
++  CONTENT_RANGE_REJECT ("space-before-last", "bytes 1- 2/3"),
++  CONTENT_RANGE_REJECT ("missing-length", "bytes 1-2"),
++  CONTENT_RANGE_REJECT ("empty-length", "bytes 1-2/"),
++  CONTENT_RANGE_REJECT ("signed-length", "bytes 1-2/+3"),
++  CONTENT_RANGE_REJECT ("negative-length", "bytes 1-2/-3"),
++  CONTENT_RANGE_REJECT ("space-before-length", "bytes 1-2/ 3"),
++  CONTENT_RANGE_REJECT ("non-digit-length", "bytes 1-2/x"),
++};
++
++#define CONTENT_RANGE_TEST(name, cases) { name, cases, countof (cases) }
++
++static const struct
++{
++  const char *name;
++  const struct content_range_case *cases;
++  size_t count;
++} content_range_tests[] = {
++  CONTENT_RANGE_TEST ("oversized-first-byte-pos", oversized_first_byte_pos),
++  CONTENT_RANGE_TEST ("oversized-last-byte-pos", oversized_last_byte_pos),
++  CONTENT_RANGE_TEST ("oversized-entity-length", oversized_entity_length),
++  CONTENT_RANGE_TEST ("max-endpoint-caller-boundary",
++                      max_endpoint_caller_boundary),
++  CONTENT_RANGE_TEST ("large-offset-first-byte-pos",
++                      large_offset_first_byte_pos),
++  CONTENT_RANGE_TEST ("large-offset-last-byte-pos",
++                      large_offset_last_byte_pos),
++  CONTENT_RANGE_TEST ("large-offset-entity-length",
++                      large_offset_entity_length),
++  CONTENT_RANGE_TEST ("max-representable-offsets", max_representable_offsets),
++  CONTENT_RANGE_TEST ("historical-syntax", historical_syntax),
++  CONTENT_RANGE_TEST ("malformed-input", malformed_input),
++};
++
++/* Run the named case.  Return NULL on success, else a diagnostic.  */
++const char *
++test_content_range (const char *name)
++{
++  size_t i;
++
++  for (i = 0; i < countof (content_range_tests); i++)
++    if (strcmp (name, content_range_tests[i].name) == 0)
++      return check_content_range_cases (name, content_range_tests[i].cases,
++                                        content_range_tests[i].count);
++  snprintf (content_range_message, sizeof content_range_message,
++            "content-range: unknown test case %s", name);
++  return content_range_message;
++}
+diff --git a/tests/unit-tests.c b/tests/unit-tests.c
+--- a/tests/unit-tests.c
++++ b/tests/unit-tests.c
+@@ -72,8 +72,36 @@ all_tests(void)
+ 
+ extern const char *program_name; /* Needed by lib/error.c. */
+ 
++/* TargetCheck test-only addition: run only the named content-range cases
++   (see content-range-cases.c).  stdout is flushed before each case so a
++   sanitizer abort cannot discard the name of the running case.  */
++static const char *
++named_tests (int count, const char *names[])
++{
++  int i;
++
++  /* These widths decide which Content-Range values a parser can hold.  */
++  printf ("TYPE SIZES: long=%d bits, wgint=%d bits\n",
++          (int) sizeof (long) * 8, (int) sizeof (wgint) * 8);
++
++  for (i = 0; i < count; i++)
++    {
++      const char *message;
++
++      printf ("RUNNING TEST %s...\n", names[i]);
++      fflush (stdout);
++      message = test_content_range (names[i]);
++      tests_run++;
++      if (message)
++        return message;
++      printf ("PASSED %s\n\n", names[i]);
++    }
++
++  return NULL;
++}
++
+ int
+-main (int argc _GL_UNUSED, const char *argv[])
++main (int argc, const char *argv[])
+ {
+   const char *result;
+ 
+@@ -88,7 +116,11 @@ main (int argc _GL_UNUSED, const char *argv[])
+ 
+   program_name = argv[0];
+ 
+-  result = all_tests();
++  /* TargetCheck: with arguments, run only the named cases.  */
++  if (argc > 1)
++    result = named_tests (argc - 1, argv + 1);
++  else
++    result = all_tests();
+ 
+   if (result != NULL)
+     {
+diff --git a/tests/unit-tests.h b/tests/unit-tests.h
+--- a/tests/unit-tests.h
++++ b/tests/unit-tests.h
+@@ -62,6 +62,8 @@ const char *test_hsts_url_rewrite_superdomain(void);
+ const char *test_hsts_url_rewrite_congruent(void);
+ const char *test_hsts_read_database(void);
+ const char *test_parse_netrc(void);
++/* TargetCheck test-only addition; see content-range-cases.c.  */
++const char *test_content_range (const char *name);
+ 
+ #endif /* TEST_H */
+ 

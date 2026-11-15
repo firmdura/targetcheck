@@ -1,0 +1,346 @@
+{
+  "schema_version": 1,
+  "target": {
+    "kind": "qemu-arm",
+    "executable": "qemu-arm",
+    "sysroot": "/usr/arm-linux-gnueabihf"
+  },
+  "variants": {
+    "baseline": {
+      "cwd": "c-arm-security/unpatched",
+      "build": [
+        {
+          "argv": [
+            "./configure",
+            "--host=arm-linux-gnueabihf",
+            "--disable-nls",
+            "--disable-iri",
+            "--without-ssl",
+            "--without-zlib",
+            "--without-libpsl",
+            "--without-metalink",
+            "--without-libuuid",
+            "--disable-pcre",
+            "--disable-pcre2",
+            "--disable-xattr",
+            "--disable-ntlm",
+            "--disable-opie",
+            "--disable-digest",
+            "--disable-threads",
+            "--disable-rpath",
+            "--without-cares",
+            "--disable-dependency-tracking",
+            "CC=arm-linux-gnueabihf-gcc",
+            "CFLAGS=-O1 -fsanitize=undefined -fno-sanitize-recover=undefined",
+            "CPPFLAGS=",
+            "LDFLAGS=-fsanitize=undefined",
+            "LIBS="
+          ],
+          "env": {
+            "CONFIG_SITE": "/dev/null",
+            "LC_ALL": "C"
+          },
+          "timeout_seconds": 1800
+        },
+        {
+          "argv": [
+            "make",
+            "-C",
+            "lib"
+          ],
+          "env": {
+            "LC_ALL": "C"
+          },
+          "timeout_seconds": 1800
+        },
+        {
+          "argv": [
+            "make",
+            "-C",
+            "src",
+            "libunittest.a"
+          ],
+          "env": {
+            "LC_ALL": "C"
+          },
+          "timeout_seconds": 1800
+        },
+        {
+          "argv": [
+            "make",
+            "-C",
+            "tests",
+            "unit-tests"
+          ],
+          "env": {
+            "LC_ALL": "C"
+          },
+          "timeout_seconds": 1800
+        }
+      ],
+      "inputs": [
+        "TARGETCHECK-VARIANT.txt",
+        "TARGETCHECK-SOURCE.sha256",
+        "configure",
+        "src/http.c",
+        "tests/content-range-cases.c",
+        "tests/unit-tests.c",
+        "tests/unit-tests.h"
+      ],
+      "artifacts": [
+        "tests/unit-tests"
+      ]
+    },
+    "candidate": {
+      "cwd": "c-arm-security/complete",
+      "build": [
+        {
+          "argv": [
+            "./configure",
+            "--host=arm-linux-gnueabihf",
+            "--disable-nls",
+            "--disable-iri",
+            "--without-ssl",
+            "--without-zlib",
+            "--without-libpsl",
+            "--without-metalink",
+            "--without-libuuid",
+            "--disable-pcre",
+            "--disable-pcre2",
+            "--disable-xattr",
+            "--disable-ntlm",
+            "--disable-opie",
+            "--disable-digest",
+            "--disable-threads",
+            "--disable-rpath",
+            "--without-cares",
+            "--disable-dependency-tracking",
+            "CC=arm-linux-gnueabihf-gcc",
+            "CFLAGS=-O1 -fsanitize=undefined -fno-sanitize-recover=undefined",
+            "CPPFLAGS=",
+            "LDFLAGS=-fsanitize=undefined",
+            "LIBS="
+          ],
+          "env": {
+            "CONFIG_SITE": "/dev/null",
+            "LC_ALL": "C"
+          },
+          "timeout_seconds": 1800
+        },
+        {
+          "argv": [
+            "make",
+            "-C",
+            "lib"
+          ],
+          "env": {
+            "LC_ALL": "C"
+          },
+          "timeout_seconds": 1800
+        },
+        {
+          "argv": [
+            "make",
+            "-C",
+            "src",
+            "libunittest.a"
+          ],
+          "env": {
+            "LC_ALL": "C"
+          },
+          "timeout_seconds": 1800
+        },
+        {
+          "argv": [
+            "make",
+            "-C",
+            "tests",
+            "unit-tests"
+          ],
+          "env": {
+            "LC_ALL": "C"
+          },
+          "timeout_seconds": 1800
+        }
+      ],
+      "inputs": [
+        "TARGETCHECK-VARIANT.txt",
+        "TARGETCHECK-SOURCE.sha256",
+        "configure",
+        "src/http.c",
+        "tests/content-range-cases.c",
+        "tests/unit-tests.c",
+        "tests/unit-tests.h"
+      ],
+      "artifacts": [
+        "tests/unit-tests"
+      ]
+    }
+  },
+  "test_inputs": [],
+  "tests": [
+    {
+      "id": "oversized-first-byte-pos",
+      "argv": [
+        "tests/unit-tests",
+        "oversized-first-byte-pos"
+      ],
+      "timeout_seconds": 120,
+      "baseline_expect": {
+        "exit_code": 1,
+        "stdout_contains": "RUNNING TEST oversized-first-byte-pos...",
+        "stderr_contains": "http.c:936:9: runtime error: signed integer overflow: 9223372036854775800 + 8 cannot be represented in type 'long long int'"
+      },
+      "candidate_expect": {
+        "exit_code": 0,
+        "stdout_contains": "PASSED oversized-first-byte-pos"
+      }
+    },
+    {
+      "id": "oversized-last-byte-pos",
+      "argv": [
+        "tests/unit-tests",
+        "oversized-last-byte-pos"
+      ],
+      "timeout_seconds": 120,
+      "baseline_expect": {
+        "exit_code": 1,
+        "stdout_contains": "RUNNING TEST oversized-last-byte-pos...",
+        "stderr_contains": "http.c:942:9: runtime error: signed integer overflow: 9223372036854775800 + 8 cannot be represented in type 'long long int'"
+      },
+      "candidate_expect": {
+        "exit_code": 0,
+        "stdout_contains": "PASSED oversized-last-byte-pos"
+      }
+    },
+    {
+      "id": "oversized-entity-length",
+      "argv": [
+        "tests/unit-tests",
+        "oversized-entity-length"
+      ],
+      "timeout_seconds": 120,
+      "baseline_expect": {
+        "exit_code": 1,
+        "stdout_contains": "RUNNING TEST oversized-entity-length...",
+        "stderr_contains": "http.c:955:11: runtime error: signed integer overflow: 9223372036854775800 + 8 cannot be represented in type 'long long int'"
+      },
+      "candidate_expect": {
+        "exit_code": 0,
+        "stdout_contains": "PASSED oversized-entity-length"
+      }
+    },
+    {
+      "id": "max-endpoint-caller-boundary",
+      "argv": [
+        "tests/unit-tests",
+        "max-endpoint-caller-boundary"
+      ],
+      "timeout_seconds": 120,
+      "baseline_expect": {
+        "exit_code": 1,
+        "stdout_contains": "content-range assertion range_rejected failed: case=max-endpoint-caller-boundary subcase=zero-first-max-last"
+      },
+      "candidate_expect": {
+        "exit_code": 0,
+        "stdout_contains": "PASSED max-endpoint-caller-boundary"
+      }
+    },
+    {
+      "id": "large-offset-first-byte-pos",
+      "argv": [
+        "tests/unit-tests",
+        "large-offset-first-byte-pos"
+      ],
+      "timeout_seconds": 120,
+      "baseline_expect": {
+        "exit_code": 0,
+        "stdout_contains": "PASSED large-offset-first-byte-pos"
+      },
+      "candidate_expect": {
+        "exit_code": 0,
+        "stdout_contains": "PASSED large-offset-first-byte-pos"
+      }
+    },
+    {
+      "id": "large-offset-last-byte-pos",
+      "argv": [
+        "tests/unit-tests",
+        "large-offset-last-byte-pos"
+      ],
+      "timeout_seconds": 120,
+      "baseline_expect": {
+        "exit_code": 0,
+        "stdout_contains": "PASSED large-offset-last-byte-pos"
+      },
+      "candidate_expect": {
+        "exit_code": 0,
+        "stdout_contains": "PASSED large-offset-last-byte-pos"
+      }
+    },
+    {
+      "id": "large-offset-entity-length",
+      "argv": [
+        "tests/unit-tests",
+        "large-offset-entity-length"
+      ],
+      "timeout_seconds": 120,
+      "baseline_expect": {
+        "exit_code": 0,
+        "stdout_contains": "PASSED large-offset-entity-length"
+      },
+      "candidate_expect": {
+        "exit_code": 0,
+        "stdout_contains": "PASSED large-offset-entity-length"
+      }
+    },
+    {
+      "id": "max-representable-offsets",
+      "argv": [
+        "tests/unit-tests",
+        "max-representable-offsets"
+      ],
+      "timeout_seconds": 120,
+      "baseline_expect": {
+        "exit_code": 0,
+        "stdout_contains": "PASSED max-representable-offsets"
+      },
+      "candidate_expect": {
+        "exit_code": 0,
+        "stdout_contains": "PASSED max-representable-offsets"
+      }
+    },
+    {
+      "id": "historical-syntax",
+      "argv": [
+        "tests/unit-tests",
+        "historical-syntax"
+      ],
+      "timeout_seconds": 120,
+      "baseline_expect": {
+        "exit_code": 0,
+        "stdout_contains": "PASSED historical-syntax"
+      },
+      "candidate_expect": {
+        "exit_code": 0,
+        "stdout_contains": "PASSED historical-syntax"
+      }
+    },
+    {
+      "id": "malformed-input",
+      "argv": [
+        "tests/unit-tests",
+        "malformed-input"
+      ],
+      "timeout_seconds": 120,
+      "baseline_expect": {
+        "exit_code": 0,
+        "stdout_contains": "PASSED malformed-input"
+      },
+      "candidate_expect": {
+        "exit_code": 0,
+        "stdout_contains": "PASSED malformed-input"
+      }
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "target": {
+    "kind": "qemu-arm",
+    "executable": "qemu-arm",
+    "sysroot": "/usr/arm-linux-gnueabihf"
+  },
+  "variants": {
+    "baseline": {
+      "cwd": "baseline",
+      "build": [
+        {
+          "argv": ["arm-linux-gnueabihf-gcc", "-O2", "-Wall", "-Werror", "-o", "port-check", "port.c"],
+          "env": {
+            "LC_ALL": "C"
+          },
+          "timeout_seconds": 120
+        }
+      ],
+      "inputs": ["port.c"],
+      "artifacts": ["port-check"]
+    },
+    "candidate": {
+      "cwd": "candidate",
+      "build": [
+        {
+          "argv": ["arm-linux-gnueabihf-gcc", "-O2", "-Wall", "-Werror", "-o", "port-check", "port.c"],
+          "env": {
+            "LC_ALL": "C"
+          },
+          "timeout_seconds": 120
+        }
+      ],
+      "inputs": ["port.c"],
+      "artifacts": ["port-check"]
+    }
+  },
+  "test_inputs": [],
+  "tests": [
+    {
+      "id": "valid-port",
+      "argv": ["port-check", "valid-port"],
+      "timeout_seconds": 30,
+      "baseline_expect": {
+        "exit_code": 0,
+        "stdout_contains": "PASS valid-port"
+      },
+      "candidate_expect": {
+        "exit_code": 0,
+        "stdout_contains": "PASS valid-port"
+      }
+    },
+    {
+      "id": "reject-out-of-range",
+      "argv": ["port-check", "reject-out-of-range"],
+      "timeout_seconds": 30,
+      "baseline_expect": {
+        "exit_code": 1,
+        "stdout_contains": "FAIL reject-out-of-range: \"70000\" was accepted as 4464"
+      },
+      "candidate_expect": {
+        "exit_code": 0,
+        "stdout_contains": "PASS reject-out-of-range"
+      }
+    }
+  ]
+}

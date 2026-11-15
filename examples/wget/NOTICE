@@ -1,0 +1,63 @@
+GNU Wget-derived material in examples/wget/
+==========================================
+
+This directory contains material derived from GNU Wget 1.21.4. It is
+covered by the GNU General Public License, version 3 or (at your option)
+any later version; the full license text is in COPYING, copied unchanged
+from the wget-1.21.4 source tarball. It is NOT covered by TargetCheck's
+Apache-2.0 license, and it is never compiled into or linked with the
+TargetCheck Go library or CLI.
+
+Upstream
+--------
+GNU Wget is Copyright (C) Free Software Foundation, Inc. The files modified
+by the patches here (src/http.c, tests/unit-tests.c, tests/unit-tests.h)
+carry, in the upstream source:
+
+  Copyright (C) 1996-2012, 2014-2015, 2018-2023 Free Software Foundation,
+  Inc. (src/http.c)
+  Copyright (C) 2005-2011, 2015, 2018-2023 Free Software Foundation, Inc.
+  (tests/unit-tests.c, tests/unit-tests.h)
+
+and the upstream GPL notice including "Additional permission under GNU GPL
+version 3 section 7" for linking with the OpenSSL project's library. Those
+notices remain in every patched file; the patches do not remove or alter
+them. The example build configures Wget without OpenSSL.
+
+Source: https://ftp.gnu.org/gnu/wget/wget-1.21.4.tar.gz
+SHA-256: 81542f5cefb8faacc39bbbc6c82ded80e3e4a88505ae72ea51df27525bcde04c
+The tarball is fetched by make prepare-demo and is not redistributed here.
+
+Upstream commits (byte-identical GitLab patch output, authorship preserved)
+---------------------------------------------------------------------------
+patches/0001-upstream-43d3ba9-fix-integer-overflow.patch
+  https://gitlab.com/gnuwget/wget/-/commit/43d3ba9336bc94937e6fae2365c6ffd30c34ffcf
+  Author: Tim Ruehsen (Tim Rühsen in the patch header), 2026-06-29
+  "* src/http.c (parse_content_range): Fix integer overflow"
+patches/0002-upstream-01ff771-use-strtoll.patch
+  https://gitlab.com/gnuwget/wget/-/commit/01ff771caac1958662ca8665eed2021ec386a7af
+  Author: Tim Ruehsen, 2026-08-12
+  "* src/http.c (parse_content_range): Use strtoll instead of strtol."
+
+Local modifications (TargetCheck contributors, 2026-11-15)
+-----------------------------------------------------------
+These are local additions. They are not upstream GNU Wget changes and have
+not been reviewed or approved upstream.
+
+patches/0000-test-content-range-unit-tests.patch
+  Test-only instrumentation for every variant: adds
+  tests/content-range-cases.c (new file, GPL-3.0-or-later) and lets the
+  upstream tests/unit-tests program run named parse_content_range cases.
+patches/0003-local-reject-overflowing-range-length.patch
+  Local guard, pending upstream review, that rejects the zero-start range
+  ending at WGINT_MAX, whose length last_byte_pos - first_byte_pos + 1 the
+  caller cannot represent. It does not cover the caller's later
+  contlen + contrange sum (see README.md), so the complete variant is not a
+  complete repair of caller-side overflow.
+
+Original TargetCheck files in this directory
+--------------------------------------------
+README.md, SHA256SUMS, make-variant.sh, matrix.json, series/*,
+manifests/*.json and democheck/main.go are original TargetCheck recipe
+files licensed under Apache-2.0 (see the repository LICENSE). They contain
+no Wget code.

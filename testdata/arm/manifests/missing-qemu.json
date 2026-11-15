@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "target": {
+    "kind": "qemu-arm",
+    "executable": "/nonexistent/qemu-arm",
+    "sysroot": "/usr/arm-linux-gnueabihf"
+  },
+  "variants": {
+    "baseline": {
+      "cwd": "baseline",
+      "build": [
+        {
+          "argv": [
+            "arm-linux-gnueabihf-gcc",
+            "-O1",
+            "-Wall",
+            "-Werror",
+            "-DOFFSET_PARSER=strtol",
+            "-o",
+            "component",
+            "component.c"
+          ],
+          "timeout_seconds": 300
+        }
+      ],
+      "inputs": [
+        "component.c"
+      ],
+      "artifacts": [
+        "component"
+      ]
+    },
+    "candidate": {
+      "cwd": "candidate",
+      "build": [
+        {
+          "argv": [
+            "arm-linux-gnueabihf-gcc",
+            "-O1",
+            "-Wall",
+            "-Werror",
+            "-DOFFSET_PARSER=strtoll",
+            "-o",
+            "component",
+            "component.c"
+          ],
+          "timeout_seconds": 300
+        }
+      ],
+      "inputs": [
+        "component.c"
+      ],
+      "artifacts": [
+        "component"
+      ]
+    }
+  },
+  "test_inputs": [],
+  "tests": [
+    {
+      "id": "abi",
+      "argv": [
+        "component",
+        "abi"
+      ],
+      "timeout_seconds": 60,
+      "baseline_expect": {
+        "exit_code": 0,
+        "stdout_contains": "ARM32 EABI hard-float: long=32 bits"
+      },
+      "candidate_expect": {
+        "exit_code": 0,
+        "stdout_contains": "ARM32 EABI hard-float: long=32 bits"
+      }
+    },
+    {
+      "id": "large-offset",
+      "argv": [
+        "component",
+        "large-offset"
+      ],
+      "timeout_seconds": 60,
+      "baseline_expect": {
+        "exit_code": 1,
+        "stderr_contains": "large-offset assertion failed: strtol(\"2147483648\") rejected a 64-bit offset (errno=ERANGE)"
+      },
+      "candidate_expect": {
+        "exit_code": 0,
+        "stdout_contains": "large-offset ok: strtoll(\"2147483648\") = 2147483648"
+      }
+    }
+  ]
+}

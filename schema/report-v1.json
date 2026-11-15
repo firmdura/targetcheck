@@ -1,0 +1,929 @@
+{
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "tool": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "go_version": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "version",
+        "commit",
+        "go_version"
+      ],
+      "additionalProperties": false
+    },
+    "target": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "native",
+            "qemu-arm",
+            ""
+          ]
+        },
+        "host_os": {
+          "type": "string"
+        },
+        "host_arch": {
+          "type": "string"
+        },
+        "executable": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sysroot": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "kind",
+        "host_os",
+        "host_arch"
+      ],
+      "additionalProperties": false
+    },
+    "manifest": {
+      "type": "object",
+      "properties": {
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "encoding": {
+          "enum": [
+            "raw_json",
+            "canonical_json"
+          ]
+        }
+      },
+      "required": [
+        "sha256",
+        "encoding"
+      ],
+      "additionalProperties": false
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/file"
+      },
+      "minItems": 0
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1
+          },
+          "version_error": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "role",
+          "path"
+        ],
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "version"
+            ],
+            "not": {
+              "required": [
+                "version_error"
+              ]
+            }
+          },
+          {
+            "required": [
+              "version_error"
+            ],
+            "not": {
+              "required": [
+                "version"
+              ]
+            }
+          }
+        ]
+      },
+      "minItems": 0
+    },
+    "variants": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/variant"
+      },
+      "minItems": 0,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/variant"
+            },
+            {
+              "properties": {
+                "name": {
+                  "const": "baseline"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/variant"
+            },
+            {
+              "properties": {
+                "name": {
+                  "const": "candidate"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "declared": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "enum": [
+              "baseline",
+              "candidate"
+            ]
+          },
+          "build_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 0,
+            "maxItems": 64
+          },
+          "test_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "maxItems": 256
+          }
+        },
+        "required": [
+          "name",
+          "build_ids",
+          "test_ids"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "allOf": [
+            {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "enum": [
+                    "baseline",
+                    "candidate"
+                  ]
+                },
+                "build_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 0,
+                  "maxItems": 64
+                },
+                "test_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1,
+                  "maxItems": 256
+                }
+              },
+              "required": [
+                "name",
+                "build_ids",
+                "test_ids"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "properties": {
+                "name": {
+                  "const": "baseline"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "enum": [
+                    "baseline",
+                    "candidate"
+                  ]
+                },
+                "build_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 0,
+                  "maxItems": 64
+                },
+                "test_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1,
+                  "maxItems": 256
+                }
+              },
+              "required": [
+                "name",
+                "build_ids",
+                "test_ids"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "properties": {
+                "name": {
+                  "const": "candidate"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "outcome": {
+      "enum": [
+        "matched",
+        "mismatch",
+        "error",
+        "cancelled"
+      ]
+    },
+    "failure": {
+      "$ref": "#/$defs/failure"
+    }
+  },
+  "required": [
+    "schema_version",
+    "tool",
+    "target",
+    "inputs",
+    "tools",
+    "variants",
+    "declared",
+    "outcome"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "enum": [
+              "matched",
+              "mismatch"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "manifest"
+        ],
+        "properties": {
+          "target": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "native",
+                  "qemu-arm"
+                ]
+              },
+              "host_os": {
+                "const": "linux"
+              },
+              "host_arch": {
+                "enum": [
+                  "amd64",
+                  "arm64"
+                ]
+              }
+            }
+          },
+          "inputs": {
+            "minItems": 1
+          },
+          "declared": {
+            "minItems": 2
+          },
+          "variants": {
+            "minItems": 2,
+            "items": {
+              "properties": {
+                "artifacts_before": {
+                  "minItems": 1
+                },
+                "artifacts_after": {
+                  "minItems": 1
+                },
+                "build": {
+                  "items": {
+                    "properties": {
+                      "status": {
+                        "const": "matched"
+                      }
+                    }
+                  }
+                },
+                "tests": {
+                  "items": {
+                    "properties": {
+                      "status": {
+                        "enum": [
+                          "matched",
+                          "mismatch"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "not": {
+          "required": [
+            "failure"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "const": "matched"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "variants": {
+            "items": {
+              "properties": {
+                "tests": {
+                  "items": {
+                    "properties": {
+                      "status": {
+                        "const": "matched"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "enum": [
+              "error",
+              "cancelled"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "failure"
+        ]
+      }
+    }
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/firmdura/targetcheck/schema/report-v1.json",
+  "title": "TargetCheck report v1",
+  "$defs": {
+    "argv": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[^\\u0000]*$"
+      },
+      "minItems": 1,
+      "prefixItems": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\\u0000]+$"
+        }
+      ]
+    },
+    "file": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000]+$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "size_bytes"
+      ],
+      "additionalProperties": false
+    },
+    "failure": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "invalid_input",
+            "missing_tool",
+            "build_failure",
+            "launch_failure",
+            "signal",
+            "timeout",
+            "cancelled",
+            "output_limit",
+            "identity_change",
+            "invalid_artifact",
+            "io",
+            "not_run"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "kind",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "capture": {
+      "type": "object",
+      "properties": {
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "log": {
+          "type": "string",
+          "pattern": "^logs/[A-Za-z0-9_-]+\\.(stdout|stderr)$"
+        }
+      },
+      "required": [
+        "bytes",
+        "truncated"
+      ],
+      "additionalProperties": false
+    },
+    "observation": {
+      "type": "object",
+      "properties": {
+        "started": {
+          "type": "boolean"
+        },
+        "argv": {
+          "$ref": "#/$defs/argv"
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000]+$"
+        },
+        "env_names": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "minItems": 0
+        },
+        "exit_code": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "signal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "failure": {
+          "$ref": "#/$defs/failure"
+        },
+        "stdout": {
+          "$ref": "#/$defs/capture"
+        },
+        "stderr": {
+          "$ref": "#/$defs/capture"
+        },
+        "duration_millis": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "started",
+        "argv",
+        "cwd",
+        "env_names",
+        "stdout",
+        "stderr",
+        "duration_millis"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "started": {
+                "const": false
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "failure"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "exit_code"
+                  ]
+                },
+                {
+                  "required": [
+                    "signal"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "signal"
+            ]
+          },
+          "then": {
+            "required": [
+              "failure"
+            ],
+            "not": {
+              "required": [
+                "exit_code"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "check": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600
+        },
+        "kind": {
+          "enum": [
+            "build",
+            "test"
+          ]
+        },
+        "argv": {
+          "$ref": "#/$defs/argv"
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000]+$"
+        },
+        "env_names": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "minItems": 0
+        },
+        "expectation": {
+          "type": "object",
+          "properties": {
+            "exit_code": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "stdout_contains": {
+              "type": "string",
+              "minLength": 1
+            },
+            "stderr_contains": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "exit_code"
+          ],
+          "additionalProperties": false
+        },
+        "observation": {
+          "$ref": "#/$defs/observation"
+        },
+        "status": {
+          "enum": [
+            "matched",
+            "mismatch",
+            "not_run",
+            "error"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "index",
+        "kind",
+        "argv",
+        "cwd",
+        "env_names",
+        "timeout_seconds",
+        "expectation",
+        "status",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "matched",
+                  "mismatch"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "observation"
+            ],
+            "properties": {
+              "observation": {
+                "properties": {
+                  "started": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "exit_code"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "failure"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "signal"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "not_run"
+              }
+            }
+          },
+          "then": {
+            "not": {
+              "required": [
+                "observation"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "artifact": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000]+$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "elf": {
+          "type": "object",
+          "properties": {
+            "class": {
+              "enum": [
+                "ELF32",
+                "ELF64"
+              ]
+            },
+            "machine": {
+              "enum": [
+                "EM_ARM",
+                "EM_X86_64",
+                "EM_AARCH64"
+              ]
+            },
+            "endian": {
+              "const": "little"
+            },
+            "abi": {
+              "enum": [
+                "arm-eabi5-hard-float",
+                "linux-amd64",
+                "linux-arm64"
+              ]
+            }
+          },
+          "required": [
+            "class",
+            "machine",
+            "endian",
+            "abi"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "size_bytes",
+        "elf"
+      ],
+      "additionalProperties": false
+    },
+    "variant": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "enum": [
+            "baseline",
+            "candidate"
+          ]
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000]+$"
+        },
+        "build": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/check"
+          },
+          "minItems": 0
+        },
+        "tests": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/check"
+          },
+          "minItems": 1,
+          "maxItems": 256
+        },
+        "artifacts_before": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifact"
+          },
+          "minItems": 0
+        },
+        "artifacts_after": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifact"
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "name",
+        "cwd",
+        "build",
+        "tests",
+        "artifacts_before",
+        "artifacts_after"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

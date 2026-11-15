@@ -1,0 +1,58 @@
+TargetCheck local guard: reject a zero-start range ending at WGINT_MAX
+
+Status: LOCAL ADDITION PENDING UPSTREAM REVIEW. This is not an upstream
+GNU Wget commit and has not been reviewed or approved upstream. It is
+applied only to the "complete" variant, after upstream commits
+43d3ba9336bc94937e6fae2365c6ffd30c34ffcf and
+01ff771caac1958662ca8665eed2021ec386a7af.
+
+After a successful parse, gethttp() in src/http.c computes
+
+    contlen = last_byte_pos - first_byte_pos + 1;
+
+With an unknown entity length ("*"), the upstream-fixed parser accepts
+"bytes 0-9223372036854775807/*", and that expression overflows the
+signed 64-bit wgint. Both positions are nonnegative and last >= first
+after the existing checks, so the expression overflows only for a zero
+first position with a WGINT_MAX last position. The guard rejects exactly
+that range; "bytes 1-9223372036854775807/*" stays accepted. The
+max-endpoint-caller-boundary case in
+tests/content-range-cases.c covers both sides.
+
+Residual, not addressed by this guard (found by code reading of the
+pristine 1.21.4 src/http.c only; not exercised by any test here): after
+the range check at line 4056, gethttp() also computes
+
+    hs->contlen = contlen + contrange;
+
+at line 4071 (the same sum is printed at lines 4083-4086), which equals
+last_byte_pos + 1. For "bytes R-9223372036854775807/*" with R equal to a
+nonzero resume offset (restval, from --start-pos=R or -c), the line 4056
+check accepts the response, this guard does not apply because R > 0,
+and that sum overflows wgint. As defined for this example, the guard and
+the caller_length assertion cover only last_byte_pos - first_byte_pos + 1
+with a zero first position. The complete variant is therefore not a
+complete repair of caller-side overflow.
+
+Copyright (C) 2026 TargetCheck contributors.
+License: GPL-3.0-or-later, as a modification of GNU Wget 1.21.4
+src/http.c (FSF copyright and GPL notices retained, including the GPL
+version 3 section 7 additional permission).
+Modified: 2026-11-15. Apply with: patch -p1 --fuzz=0
+
+diff --git a/src/http.c b/src/http.c
+--- a/src/http.c
++++ b/src/http.c
+@@ -957,6 +957,12 @@ parse_content_range (const char *hdr, wgint *first_byte_ptr,
+     return false;
+   if (*last_byte_ptr < *first_byte_ptr)
+     return false;
++  /* Local TargetCheck guard, pending upstream review: the caller computes
++     last_byte_pos - first_byte_pos + 1.  Both positions are nonnegative
++     and last >= first here, so that length overflows wgint only for a
++     zero first position and a WGINT_MAX last position.  */
++  if (*first_byte_ptr == 0 && *last_byte_ptr == WGINT_MAX)
++    return false;
+   if (*hdr == '*')
+     num = -1;
+   else

@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: Apache-2.0
+# Reviewed SHA-256 identities for the TargetCheck Wget example.
+# make-variant.sh refuses any input or resulting source that differs.
+#
+# Pinned public source: https://ftp.gnu.org/gnu/wget/wget-1.21.4.tar.gz
+81542f5cefb8faacc39bbbc6c82ded80e3e4a88505ae72ea51df27525bcde04c  wget-1.21.4.tar.gz
+#
+# Committed patches. The upstream files are byte-identical to
+# https://gitlab.com/gnuwget/wget/-/commit/<commit>.patch as fetched on 2026-11-15.
+1af2c918a5a40ceed446b3db6efdedb3aaf192933cb8fe9301129c0339cfd8f2  patches/0000-test-content-range-unit-tests.patch
+f4ade3445a9c1426271f3ae5ca4bc893b07ec27bba9af856dbfcda89602f4788  patches/0001-upstream-43d3ba9-fix-integer-overflow.patch
+b4cf603929e25a7ecce617de5c895f9ebf24e76ecb3186e259a9116280319639  patches/0002-upstream-01ff771-use-strtoll.patch
+a5c1ccaeca4f5d5f9b18919dcfe2db722789e262d49078a59c27ae6011aa8842  patches/0003-local-reject-overflowing-range-length.patch
+#
+# Resulting variant sources after patch -p1 --fuzz=0 of each series/ file.
+# TARGETCHECK-SOURCE.sha256 lists every source file of the variant tree; the
+# instrumentation files are identical in all variants by construction.
+0fe077f8c9d5f46e48417802c584eb4fa30e5bf722abe6bc9e9bdd7b4d5f733d  unpatched/TARGETCHECK-SOURCE.sha256
+9e2cefe30a65bebe8465ef19f0349e519a38e9d5ae3bcc6b1f395620739654df  unpatched/src/http.c
+c8b34e55fc3c71bc7b00c1568a163784dddc5c7b283a2e7bd3a1d9ecc05c7f6a  unpatched/tests/content-range-cases.c
+0fad8bfc383a1bf5dee774037103f88742940ee9cb03cfa0fb49c14ef1da2893  unpatched/tests/unit-tests.c
+96fe6faa9b4a727f9f0a696819e6c1375d229bec034806140399ba422f06f5a8  unpatched/tests/unit-tests.h
+81e1c0f7ab4a64c5bebf867f449d0b3280fda22043331a0b62a2300404689f63  first-fix/TARGETCHECK-SOURCE.sha256
+8527764144751816625f96cd7ac09adac2b704e9ab2ef4def90495da942b4314  first-fix/src/http.c
+c8b34e55fc3c71bc7b00c1568a163784dddc5c7b283a2e7bd3a1d9ecc05c7f6a  first-fix/tests/content-range-cases.c
+0fad8bfc383a1bf5dee774037103f88742940ee9cb03cfa0fb49c14ef1da2893  first-fix/tests/unit-tests.c
+96fe6faa9b4a727f9f0a696819e6c1375d229bec034806140399ba422f06f5a8  first-fix/tests/unit-tests.h
+fd1c9d4072b3a1d7303870196d6bc706a9af6bc4ce415db645794c0aec380f6a  complete/TARGETCHECK-SOURCE.sha256
+30d3908326b22abafbaec100869b523d4e7eb7ec5e6981b5960fd515480a7b86  complete/src/http.c
+c8b34e55fc3c71bc7b00c1568a163784dddc5c7b283a2e7bd3a1d9ecc05c7f6a  complete/tests/content-range-cases.c
+0fad8bfc383a1bf5dee774037103f88742940ee9cb03cfa0fb49c14ef1da2893  complete/tests/unit-tests.c
+96fe6faa9b4a727f9f0a696819e6c1375d229bec034806140399ba422f06f5a8  complete/tests/unit-tests.h

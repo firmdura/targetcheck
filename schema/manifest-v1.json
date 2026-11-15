@@ -1,0 +1,273 @@
+{
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "target": {
+      "$ref": "#/$defs/target"
+    },
+    "variants": {
+      "type": "object",
+      "properties": {
+        "baseline": {
+          "$ref": "#/$defs/variant"
+        },
+        "candidate": {
+          "$ref": "#/$defs/variant"
+        }
+      },
+      "required": [
+        "baseline",
+        "candidate"
+      ],
+      "additionalProperties": false
+    },
+    "test_inputs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000]+$"
+      },
+      "minItems": 0
+    },
+    "tests": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/test"
+      },
+      "minItems": 1,
+      "maxItems": 256
+    }
+  },
+  "required": [
+    "schema_version",
+    "target",
+    "variants",
+    "test_inputs",
+    "tests"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/firmdura/targetcheck/schema/manifest-v1.json",
+  "title": "TargetCheck manifest v1",
+  "$defs": {
+    "argv": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[^\\u0000]*$"
+      },
+      "minItems": 1,
+      "prefixItems": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\\u0000]+$"
+        }
+      ]
+    },
+    "command": {
+      "type": "object",
+      "properties": {
+        "argv": {
+          "$ref": "#/$defs/argv"
+        },
+        "env": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[^\\u0000]*$"
+          }
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600
+        }
+      },
+      "required": [
+        "argv",
+        "timeout_seconds"
+      ],
+      "additionalProperties": false
+    },
+    "variant": {
+      "type": "object",
+      "properties": {
+        "cwd": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000]+$"
+        },
+        "build": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/command"
+          },
+          "minItems": 0,
+          "maxItems": 64
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000]+$"
+          },
+          "minItems": 1
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000]+$"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "cwd",
+        "build",
+        "inputs",
+        "artifacts"
+      ],
+      "additionalProperties": false
+    },
+    "target": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "native"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "qemu-arm"
+            },
+            "executable": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sysroot": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "kind",
+            "executable",
+            "sysroot"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "test": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "argv": {
+          "$ref": "#/$defs/argv"
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600
+        },
+        "baseline_expect": {
+          "type": "object",
+          "properties": {
+            "exit_code": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "stdout_contains": {
+              "type": "string",
+              "minLength": 1
+            },
+            "stderr_contains": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "exit_code"
+          ],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "exit_code": {
+                    "minimum": 1
+                  }
+                }
+              },
+              "then": {
+                "anyOf": [
+                  {
+                    "required": [
+                      "stdout_contains"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "stderr_contains"
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "candidate_expect": {
+          "type": "object",
+          "properties": {
+            "exit_code": {
+              "const": 0
+            },
+            "stdout_contains": {
+              "type": "string",
+              "minLength": 1
+            },
+            "stderr_contains": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "exit_code"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "argv",
+        "timeout_seconds",
+        "baseline_expect",
+        "candidate_expect"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

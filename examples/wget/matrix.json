@@ -1,0 +1,223 @@
+{
+  "rows": [
+    {
+      "name": "a-native-security",
+      "matrix": "a",
+      "claim": "Native: the unpatched baseline stops with the named UBSan signed-overflow diagnostic in each decimal field and fails the caller boundary; the complete candidate passes the same full suite.",
+      "target": "native",
+      "baseline": "unpatched",
+      "candidate": "complete",
+      "exit_code": 0,
+      "outcome": "matched",
+      "test_status": {
+        "baseline": "matched",
+        "candidate": "matched"
+      },
+      "markers": [
+        {
+          "variant": "baseline",
+          "test": "oversized-first-byte-pos",
+          "stream": "stderr",
+          "exit_code": 1,
+          "contains": "http.c:936:9: runtime error: signed integer overflow: 9223372036854775800 + 8 cannot be represented in type 'long int'"
+        },
+        {
+          "variant": "baseline",
+          "test": "oversized-last-byte-pos",
+          "stream": "stderr",
+          "exit_code": 1,
+          "contains": "http.c:942:9: runtime error: signed integer overflow: 9223372036854775800 + 8 cannot be represented in type 'long int'"
+        },
+        {
+          "variant": "baseline",
+          "test": "oversized-entity-length",
+          "stream": "stderr",
+          "exit_code": 1,
+          "contains": "http.c:955:11: runtime error: signed integer overflow: 9223372036854775800 + 8 cannot be represented in type 'long int'"
+        },
+        {
+          "variant": "baseline",
+          "test": "max-endpoint-caller-boundary",
+          "stream": "stdout",
+          "exit_code": 1,
+          "contains": "content-range assertion range_rejected failed: case=max-endpoint-caller-boundary subcase=zero-first-max-last header=\"bytes 0-9223372036854775807/*\": parser accepted first=0 last=9223372036854775807 length=-1 (caller length last-first+1 overflows wgint); expected rejection"
+        }
+      ]
+    },
+    {
+      "name": "b-native-large-offset-first-fix",
+      "matrix": "b",
+      "claim": "Native 64-bit: the large-offset compatibility subset passes with the first upstream fix only.",
+      "target": "native",
+      "baseline": "unpatched",
+      "candidate": "first-fix",
+      "exit_code": 0,
+      "outcome": "matched",
+      "test_status": {
+        "baseline": "matched",
+        "candidate": "matched"
+      },
+      "markers": []
+    },
+    {
+      "name": "b-arm-large-offset-first-fix",
+      "matrix": "b",
+      "claim": "ARM32 under QEMU: the same subset fails with the first upstream fix only, through the named range_accepted assertion (32-bit long in strtol).",
+      "target": "qemu-arm",
+      "baseline": "unpatched",
+      "candidate": "first-fix",
+      "exit_code": 1,
+      "outcome": "mismatch",
+      "test_status": {
+        "baseline": "matched",
+        "candidate": "mismatch"
+      },
+      "markers": [
+        {
+          "variant": "candidate",
+          "test": "large-offset-first-byte-pos",
+          "stream": "stdout",
+          "exit_code": 1,
+          "contains": "content-range assertion range_accepted failed: case=large-offset-first-byte-pos subcase=above-2gib"
+        },
+        {
+          "variant": "candidate",
+          "test": "large-offset-last-byte-pos",
+          "stream": "stdout",
+          "exit_code": 1,
+          "contains": "content-range assertion range_accepted failed: case=large-offset-last-byte-pos subcase=above-2gib"
+        },
+        {
+          "variant": "candidate",
+          "test": "large-offset-entity-length",
+          "stream": "stdout",
+          "exit_code": 1,
+          "contains": "content-range assertion range_accepted failed: case=large-offset-entity-length subcase=above-2gib"
+        },
+        {
+          "variant": "candidate",
+          "test": "max-representable-offsets",
+          "stream": "stdout",
+          "exit_code": 1,
+          "contains": "content-range assertion range_accepted failed: case=max-representable-offsets subcase=max-entity-length"
+        }
+      ]
+    },
+    {
+      "name": "b-arm-large-offset-corrected",
+      "matrix": "b",
+      "claim": "ARM32 under QEMU: the first-fix failure is the expected baseline (exact exit and named assertion) and the complete candidate passes the same subset.",
+      "target": "qemu-arm",
+      "baseline": "first-fix",
+      "candidate": "complete",
+      "exit_code": 0,
+      "outcome": "matched",
+      "test_status": {
+        "baseline": "matched",
+        "candidate": "matched"
+      },
+      "markers": [
+        {
+          "variant": "baseline",
+          "test": "large-offset-first-byte-pos",
+          "stream": "stdout",
+          "exit_code": 1,
+          "contains": "content-range assertion range_accepted failed: case=large-offset-first-byte-pos subcase=above-2gib"
+        },
+        {
+          "variant": "baseline",
+          "test": "large-offset-last-byte-pos",
+          "stream": "stdout",
+          "exit_code": 1,
+          "contains": "content-range assertion range_accepted failed: case=large-offset-last-byte-pos subcase=above-2gib"
+        },
+        {
+          "variant": "baseline",
+          "test": "large-offset-entity-length",
+          "stream": "stdout",
+          "exit_code": 1,
+          "contains": "content-range assertion range_accepted failed: case=large-offset-entity-length subcase=above-2gib"
+        },
+        {
+          "variant": "baseline",
+          "test": "max-representable-offsets",
+          "stream": "stdout",
+          "exit_code": 1,
+          "contains": "content-range assertion range_accepted failed: case=max-representable-offsets subcase=max-entity-length"
+        }
+      ]
+    },
+    {
+      "name": "c-arm-security",
+      "matrix": "c",
+      "claim": "ARM32 under QEMU: the complete candidate passes the shared full boundary/compatibility suite; the unpatched ARM baseline shows the same UBSan diagnostics. Row a provides the native half of row c.",
+      "target": "qemu-arm",
+      "baseline": "unpatched",
+      "candidate": "complete",
+      "exit_code": 0,
+      "outcome": "matched",
+      "test_status": {
+        "baseline": "matched",
+        "candidate": "matched"
+      },
+      "markers": [
+        {
+          "variant": "baseline",
+          "test": "oversized-first-byte-pos",
+          "stream": "stderr",
+          "exit_code": 1,
+          "contains": "http.c:936:9: runtime error: signed integer overflow: 9223372036854775800 + 8 cannot be represented in type 'long long int'"
+        },
+        {
+          "variant": "baseline",
+          "test": "oversized-last-byte-pos",
+          "stream": "stderr",
+          "exit_code": 1,
+          "contains": "http.c:942:9: runtime error: signed integer overflow: 9223372036854775800 + 8 cannot be represented in type 'long long int'"
+        },
+        {
+          "variant": "baseline",
+          "test": "oversized-entity-length",
+          "stream": "stderr",
+          "exit_code": 1,
+          "contains": "http.c:955:11: runtime error: signed integer overflow: 9223372036854775800 + 8 cannot be represented in type 'long long int'"
+        },
+        {
+          "variant": "baseline",
+          "test": "max-endpoint-caller-boundary",
+          "stream": "stdout",
+          "exit_code": 1,
+          "contains": "content-range assertion range_rejected failed: case=max-endpoint-caller-boundary subcase=zero-first-max-last header=\"bytes 0-9223372036854775807/*\": parser accepted first=0 last=9223372036854775807 length=-1 (caller length last-first+1 overflows wgint); expected rejection"
+        }
+      ]
+    },
+    {
+      "name": "missing-qemu",
+      "matrix": "tool",
+      "claim": "A missing QEMU executable is an infrastructure/input failure (exit 2), distinct from the failing candidate (exit 1); no command runs.",
+      "target": "qemu-arm",
+      "same_as": "b-arm-large-offset-first-fix",
+      "differs": "executable",
+      "exit_code": 2,
+      "outcome": "error",
+      "failure": {
+        "kind": "missing_tool",
+        "message_prefix": "QEMU executable is unavailable"
+      }
+    },
+    {
+      "name": "missing-sysroot",
+      "matrix": "tool",
+      "claim": "A missing ARM sysroot is an input failure (exit 2); no command runs.",
+      "target": "qemu-arm",
+      "same_as": "b-arm-large-offset-first-fix",
+      "differs": "sysroot",
+      "exit_code": 2,
+      "outcome": "error",
+      "failure": {
+        "kind": "invalid_input",
+        "message_prefix": "QEMU sysroot is unavailable"
+      }
+    }
+  ]
+}

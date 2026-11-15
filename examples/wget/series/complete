@@ -1,0 +1,5 @@
+# Patch series for the complete candidate: both upstream commits plus the local guard.
+0000-test-content-range-unit-tests.patch
+0001-upstream-43d3ba9-fix-integer-overflow.patch
+0002-upstream-01ff771-use-strtoll.patch
+0003-local-reject-overflowing-range-length.patch

@@ -1,0 +1,97 @@
+[
+  {
+    "file": "valid/arm.json",
+    "schema": "manifest-v1.json",
+    "valid": true
+  },
+  {
+    "file": "valid/native.json",
+    "schema": "manifest-v1.json",
+    "valid": true
+  },
+  {
+    "file": "valid/report-matched.json",
+    "schema": "report-v1.json",
+    "valid": true
+  },
+  {
+    "file": "valid/report-partial.json",
+    "schema": "report-v1.json",
+    "valid": true
+  },
+  {
+    "file": "invalid/candidate-failure.json",
+    "schema": "manifest-v1.json",
+    "valid": false
+  },
+  {
+    "file": "invalid/empty-argv.json",
+    "schema": "manifest-v1.json",
+    "valid": false
+  },
+  {
+    "file": "invalid/empty-executable.json",
+    "schema": "manifest-v1.json",
+    "valid": false
+  },
+  {
+    "file": "invalid/missing-inputs.json",
+    "schema": "manifest-v1.json",
+    "valid": false
+  },
+  {
+    "file": "invalid/negative-without-marker.json",
+    "schema": "manifest-v1.json",
+    "valid": false
+  },
+  {
+    "file": "invalid/report-duplicate-baseline.json",
+    "schema": "report-v1.json",
+    "valid": false
+  },
+  {
+    "file": "invalid/report-empty-as-matched.json",
+    "schema": "report-v1.json",
+    "valid": false
+  },
+  {
+    "file": "invalid/report-error-as-matched.json",
+    "schema": "report-v1.json",
+    "valid": false
+  },
+  {
+    "file": "invalid/report-illegal-state.json",
+    "schema": "report-v1.json",
+    "valid": false
+  },
+  {
+    "file": "invalid/report-missing-declared.json",
+    "schema": "report-v1.json",
+    "valid": false
+  },
+  {
+    "file": "invalid/report-missing-identity.json",
+    "schema": "report-v1.json",
+    "valid": false
+  },
+  {
+    "file": "invalid/report-not-run-as-matched.json",
+    "schema": "report-v1.json",
+    "valid": false
+  },
+  {
+    "file": "invalid/timeout-zero.json",
+    "schema": "manifest-v1.json",
+    "valid": false
+  },
+  {
+    "file": "invalid/unknown-field.json",
+    "schema": "manifest-v1.json",
+    "valid": false
+  },
+  {
+    "file": "invalid/unsupported-version.json",
+    "schema": "manifest-v1.json",
+    "valid": false
+  }
+]

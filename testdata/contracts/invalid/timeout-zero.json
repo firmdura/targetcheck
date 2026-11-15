@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "target": {
+    "kind": "native"
+  },
+  "variants": {
+    "baseline": {
+      "cwd": "baseline",
+      "build": [
+        {
+          "argv": [
+            "cc",
+            "main.c",
+            "-o",
+            "component"
+          ],
+          "timeout_seconds": 30
+        }
+      ],
+      "inputs": [
+        "main.c"
+      ],
+      "artifacts": [
+        "component"
+      ]
+    },
+    "candidate": {
+      "cwd": "candidate",
+      "build": [
+        {
+          "argv": [
+            "cc",
+            "main.c",
+            "-o",
+            "component"
+          ],
+          "timeout_seconds": 30
+        }
+      ],
+      "inputs": [
+        "main.c"
+      ],
+      "artifacts": [
+        "component"
+      ]
+    }
+  },
+  "test_inputs": [
+    "cases.json"
+  ],
+  "tests": [
+    {
+      "id": "boundary",
+      "argv": [
+        "component",
+        "boundary"
+      ],
+      "timeout_seconds": 0,
+      "baseline_expect": {
+        "exit_code": 1,
+        "stderr_contains": "boundary assertion"
+      },
+      "candidate_expect": {
+        "exit_code": 0
+      }
+    }
+  ]
+}

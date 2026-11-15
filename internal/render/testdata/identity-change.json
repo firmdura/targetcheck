@@ -1,0 +1,394 @@
+{
+  "schema_version": 1,
+  "tool": {
+    "version": "0.1.0-test",
+    "commit": "fixture",
+    "go_version": "go1.27.4"
+  },
+  "target": {
+    "kind": "native",
+    "host_os": "linux",
+    "host_arch": "amd64"
+  },
+  "manifest": {
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "encoding": "raw_json"
+  },
+  "inputs": [
+    {
+      "path": "a-config.h",
+      "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "size_bytes": 10
+    },
+    {
+      "path": "z-test.c",
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "size_bytes": 20
+    }
+  ],
+  "tools": [
+    {
+      "role": "compiler",
+      "path": "/usr/bin/gcc",
+      "version": "gcc 12.2.0"
+    }
+  ],
+  "declared": [
+    {
+      "name": "baseline",
+      "build_ids": [
+        "build-0"
+      ],
+      "test_ids": [
+        "security",
+        "compatibility"
+      ]
+    },
+    {
+      "name": "candidate",
+      "build_ids": [
+        "build-0"
+      ],
+      "test_ids": [
+        "security",
+        "compatibility"
+      ]
+    }
+  ],
+  "variants": [
+    {
+      "name": "baseline",
+      "cwd": "baseline",
+      "build": [
+        {
+          "id": "build-0",
+          "index": 0,
+          "kind": "build",
+          "argv": [
+            "gcc",
+            "test.c",
+            "-o",
+            "parser"
+          ],
+          "cwd": "baseline",
+          "env_names": [
+            "CFLAGS"
+          ],
+          "timeout_seconds": 5,
+          "expectation": {
+            "exit_code": 0
+          },
+          "observation": {
+            "started": true,
+            "argv": [
+              "gcc",
+              "test.c",
+              "-o",
+              "parser"
+            ],
+            "cwd": "baseline",
+            "env_names": [
+              "CFLAGS"
+            ],
+            "exit_code": 0,
+            "stdout": {
+              "bytes": 0,
+              "truncated": false,
+              "log": "logs/baseline-build-0.stdout"
+            },
+            "stderr": {
+              "bytes": 0,
+              "truncated": false,
+              "log": "logs/baseline-build-0.stderr"
+            },
+            "duration_millis": 12
+          },
+          "status": "matched",
+          "reason": "normal exit and all declared markers matched"
+        }
+      ],
+      "tests": [
+        {
+          "id": "security",
+          "index": 0,
+          "kind": "test",
+          "argv": [
+            "./parser",
+            "security"
+          ],
+          "cwd": "baseline",
+          "env_names": [
+            "CFLAGS"
+          ],
+          "timeout_seconds": 5,
+          "expectation": {
+            "exit_code": 3,
+            "stderr_contains": "signed overflow"
+          },
+          "observation": {
+            "started": true,
+            "argv": [
+              "./parser",
+              "security"
+            ],
+            "cwd": "baseline",
+            "env_names": [
+              "CFLAGS"
+            ],
+            "exit_code": 3,
+            "stdout": {
+              "bytes": 0,
+              "truncated": false,
+              "log": "logs/baseline-test-0.stdout"
+            },
+            "stderr": {
+              "bytes": 15,
+              "truncated": false,
+              "log": "logs/baseline-test-0.stderr"
+            },
+            "duration_millis": 12
+          },
+          "status": "matched",
+          "reason": "normal exit and all declared markers matched"
+        },
+        {
+          "id": "compatibility",
+          "index": 1,
+          "kind": "test",
+          "argv": [
+            "./parser",
+            "compatibility"
+          ],
+          "cwd": "baseline",
+          "env_names": [
+            "CFLAGS"
+          ],
+          "timeout_seconds": 5,
+          "expectation": {
+            "exit_code": 0
+          },
+          "observation": {
+            "started": true,
+            "argv": [
+              "./parser",
+              "compatibility"
+            ],
+            "cwd": "baseline",
+            "env_names": [
+              "CFLAGS"
+            ],
+            "exit_code": 0,
+            "stdout": {
+              "bytes": 0,
+              "truncated": false,
+              "log": "logs/baseline-test-1.stdout"
+            },
+            "stderr": {
+              "bytes": 0,
+              "truncated": false,
+              "log": "logs/baseline-test-1.stderr"
+            },
+            "duration_millis": 12
+          },
+          "status": "matched",
+          "reason": "normal exit and all declared markers matched"
+        }
+      ],
+      "artifacts_before": [
+        {
+          "path": "baseline/parser",
+          "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "size_bytes": 100,
+          "elf": {
+            "class": "ELF64",
+            "machine": "EM_X86_64",
+            "endian": "little",
+            "abi": "linux-amd64"
+          }
+        }
+      ],
+      "artifacts_after": [
+        {
+          "path": "baseline/parser",
+          "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "size_bytes": 100,
+          "elf": {
+            "class": "ELF64",
+            "machine": "EM_X86_64",
+            "endian": "little",
+            "abi": "linux-amd64"
+          }
+        }
+      ]
+    },
+    {
+      "name": "candidate",
+      "cwd": "candidate",
+      "build": [
+        {
+          "id": "build-0",
+          "index": 0,
+          "kind": "build",
+          "argv": [
+            "gcc",
+            "test.c",
+            "-o",
+            "parser"
+          ],
+          "cwd": "candidate",
+          "env_names": [
+            "CFLAGS"
+          ],
+          "timeout_seconds": 5,
+          "expectation": {
+            "exit_code": 0
+          },
+          "observation": {
+            "started": true,
+            "argv": [
+              "gcc",
+              "test.c",
+              "-o",
+              "parser"
+            ],
+            "cwd": "candidate",
+            "env_names": [
+              "CFLAGS"
+            ],
+            "exit_code": 0,
+            "stdout": {
+              "bytes": 0,
+              "truncated": false,
+              "log": "logs/candidate-build-0.stdout"
+            },
+            "stderr": {
+              "bytes": 0,
+              "truncated": false,
+              "log": "logs/candidate-build-0.stderr"
+            },
+            "duration_millis": 12
+          },
+          "status": "matched",
+          "reason": "normal exit and all declared markers matched"
+        }
+      ],
+      "tests": [
+        {
+          "id": "security",
+          "index": 0,
+          "kind": "test",
+          "argv": [
+            "./parser",
+            "security"
+          ],
+          "cwd": "candidate",
+          "env_names": [
+            "CFLAGS"
+          ],
+          "timeout_seconds": 5,
+          "expectation": {
+            "exit_code": 0
+          },
+          "observation": {
+            "started": true,
+            "argv": [
+              "./parser",
+              "security"
+            ],
+            "cwd": "candidate",
+            "env_names": [
+              "CFLAGS"
+            ],
+            "exit_code": 0,
+            "stdout": {
+              "bytes": 0,
+              "truncated": false,
+              "log": "logs/candidate-test-0.stdout"
+            },
+            "stderr": {
+              "bytes": 0,
+              "truncated": false,
+              "log": "logs/candidate-test-0.stderr"
+            },
+            "duration_millis": 12
+          },
+          "status": "error",
+          "reason": "artifact identity changed; behavioral verdict unavailable"
+        },
+        {
+          "id": "compatibility",
+          "index": 1,
+          "kind": "test",
+          "argv": [
+            "./parser",
+            "compatibility"
+          ],
+          "cwd": "candidate",
+          "env_names": [
+            "CFLAGS"
+          ],
+          "timeout_seconds": 5,
+          "expectation": {
+            "exit_code": 0
+          },
+          "observation": {
+            "started": true,
+            "argv": [
+              "./parser",
+              "compatibility"
+            ],
+            "cwd": "candidate",
+            "env_names": [
+              "CFLAGS"
+            ],
+            "exit_code": 0,
+            "stdout": {
+              "bytes": 0,
+              "truncated": false,
+              "log": "logs/candidate-test-1.stdout"
+            },
+            "stderr": {
+              "bytes": 0,
+              "truncated": false,
+              "log": "logs/candidate-test-1.stderr"
+            },
+            "duration_millis": 12
+          },
+          "status": "error",
+          "reason": "artifact identity changed; behavioral verdict unavailable"
+        }
+      ],
+      "artifacts_before": [
+        {
+          "path": "candidate/parser",
+          "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "size_bytes": 100,
+          "elf": {
+            "class": "ELF64",
+            "machine": "EM_X86_64",
+            "endian": "little",
+            "abi": "linux-amd64"
+          }
+        }
+      ],
+      "artifacts_after": [
+        {
+          "path": "candidate/parser",
+          "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "size_bytes": 100,
+          "elf": {
+            "class": "ELF64",
+            "machine": "EM_X86_64",
+            "endian": "little",
+            "abi": "linux-amd64"
+          }
+        }
+      ]
+    }
+  ],
+  "outcome": "error",
+  "failure": {
+    "kind": "identity_change",
+    "message": "candidate/parser changed during testing"
+  }
+}

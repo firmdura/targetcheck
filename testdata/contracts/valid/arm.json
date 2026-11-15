@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "target": {
+    "kind": "qemu-arm",
+    "executable": "/usr/bin/qemu-arm",
+    "sysroot": "/usr/arm-linux-gnueabihf"
+  },
+  "variants": {
+    "baseline": {
+      "cwd": "baseline",
+      "build": [
+        {
+          "argv": [
+            "cc",
+            "main.c",
+            "-o",
+            "component"
+          ],
+          "timeout_seconds": 30
+        }
+      ],
+      "inputs": [
+        "main.c"
+      ],
+      "artifacts": [
+        "component"
+      ]
+    },
+    "candidate": {
+      "cwd": "candidate",
+      "build": [
+        {
+          "argv": [
+            "cc",
+            "main.c",
+            "-o",
+            "component"
+          ],
+          "timeout_seconds": 30
+        }
+      ],
+      "inputs": [
+        "main.c"
+      ],
+      "artifacts": [
+        "component"
+      ]
+    }
+  },
+  "test_inputs": [
+    "cases.json"
+  ],
+  "tests": [
+    {
+      "id": "boundary",
+      "argv": [
+        "component",
+        "boundary"
+      ],
+      "timeout_seconds": 5,
+      "baseline_expect": {
+        "exit_code": 1,
+        "stderr_contains": "boundary assertion"
+      },
+      "candidate_expect": {
+        "exit_code": 0
+      }
+    }
+  ]
+}
