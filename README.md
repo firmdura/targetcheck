@@ -247,6 +247,13 @@ make test-container    # offline: verify, test-native, test-arm, demo and dist
 skip. `make test-container` brings the complete log, the demo evidence and the
 `dist/` archives back to `.cache/test-container/`. CI runs the same targets.
 
+## About Firmdura
+
+This repository contains a standalone verification utility from
+[Firmdura](https://firmdura.com). Firmdura's commercial offer is shared embedded
+Linux security maintenance through versioned security layers or patch overlays
+for agreed user-space components.
+
 ## License
 
 TargetCheck's code, documentation, scripts and examples are licensed under the
