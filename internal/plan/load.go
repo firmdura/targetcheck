@@ -7,6 +7,7 @@ package plan
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"unicode/utf8"
@@ -45,10 +46,17 @@ func Load(r io.Reader) (model.Spec, error) {
 	value, err := readValue(dec, 0)
 	if err == nil {
 		if _, end := dec.Token(); end != io.EOF {
-			err = fmt.Errorf("manifest must contain exactly one JSON value")
+			err = end
+			if err == nil {
+				err = fmt.Errorf("manifest must contain exactly one JSON value")
+			}
 		}
 	}
 	if err != nil {
+		var syntax *json.SyntaxError
+		if errors.As(err, &syntax) {
+			return model.Spec{}, invalid(fmt.Sprintf("invalid JSON manifest at byte %d", syntax.Offset), err)
+		}
 		return model.Spec{}, invalid("invalid JSON manifest", err)
 	}
 	if err = wireShape(value); err != nil {

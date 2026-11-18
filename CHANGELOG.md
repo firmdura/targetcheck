@@ -5,6 +5,15 @@ All notable changes to TargetCheck are recorded here. Versions follow
 [Versions and compatibility](docs/usage.md#versions-and-compatibility)
 describes what stays compatible within v1.
 
+## v1.0.1
+
+### Fixed
+
+- JSON decoder syntax errors now include their one-based byte position in
+  CLI diagnostics and library errors, including errors after a complete JSON
+  value. This makes malformed manifests easier to fix. Validation rules,
+  schema versions and exit codes are unchanged.
+
 ## v1.0.0
 
 The first stable release. TargetCheck behaves as v0.1.0 did, apart from the

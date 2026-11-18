@@ -6,7 +6,7 @@ comparison from your own Go program. It has the same semantics as the
 model. The package has no dependencies outside the Go standard library.
 
 ```sh
-go get github.com/firmdura/targetcheck@v1.0.0
+go get github.com/firmdura/targetcheck@v1.0.1
 ```
 
 The module requires Go 1.27.4 or later. The reference documentation is on

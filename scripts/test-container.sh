@@ -23,7 +23,7 @@
 set -eu
 
 image=${DEV_IMAGE:-targetcheck-dev:go1.27.4}
-version=${VERSION:-v1.0.0}
+version=${VERSION:-v1.0.1}
 cache=${WGET_CACHE_DIR:-.cache/wget}
 tarball=$cache/wget-1.21.4.tar.gz
 targets=${*:-verify test-native test-arm demo dist}

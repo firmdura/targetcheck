@@ -30,7 +30,7 @@ marker. A crash, a missing program or an unrelated failure cannot match it.
 - Linux amd64 or arm64.
 - `targetcheck` on your `PATH`. From the extracted release directory, run
   `export PATH="$PWD:$PATH"`. Or install it with
-  `go install github.com/firmdura/targetcheck/cmd/targetcheck@v1.0.0`.
+  `go install github.com/firmdura/targetcheck/cmd/targetcheck@v1.0.1`.
 - For the native run: a C compiler named `cc`.
 - For the ARM32 run: `arm-linux-gnueabihf-gcc`, `qemu-arm` and an ARM32
   hard-float sysroot in `/usr/arm-linux-gnueabihf`. In Debian, the packages

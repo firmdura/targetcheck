@@ -516,26 +516,31 @@ func TestConsoleDiagnosticStatesOutcomeKindAndMessage(t *testing.T) {
 		})
 	}
 
-	t.Run("malformed manifest keeps the loader's message once", func(t *testing.T) {
-		dir := temp(t)
-		root := filepath.Join(dir, "workspace")
-		if err := os.Mkdir(root, 0700); err != nil {
-			t.Fatal(err)
-		}
-		manifest := filepath.Join(dir, "bad.json")
-		write(t, manifest, []byte(`{"schema_version":1,"schema_version":1}`))
-		message := `load manifest: invalid JSON manifest: duplicate key "schema_version"`
-		got := invoke(t, context.Background(), manifest, root, filepath.Join(dir, "report"), nil)
-		if got.code != 2 || got.stderr != "targetcheck: error: invalid_input: "+message+"\n" || got.report == nil || got.report.Failure.Message != message {
-			t.Fatalf("exit %d stderr %q report %+v", got.code, got.stderr, got.report)
-		}
-		// Without any report, the diagnostic still names the run's failure first.
-		got = invoke(t, context.Background(), manifest, root, filepath.Join(root, "report"), nil)
-		want := "targetcheck: error: invalid_input: " + message + "; no report written: failure reports for an invalid manifest must be outside the input workspace\n"
-		if got.code != 2 || got.stderr != want || got.report != nil || got.stdout != "" {
-			t.Fatalf("exit %d stdout %q stderr %q, want %q", got.code, got.stdout, got.stderr, want)
-		}
-	})
+	for _, c := range []struct{ name, manifest, message string }{
+		{"duplicate key", `{"schema_version":1,"schema_version":1}`, `load manifest: invalid JSON manifest: duplicate key "schema_version"`},
+		{"syntax error position", `{"schema_version":!}`, `load manifest: invalid JSON manifest at byte 19: invalid character '!' looking for beginning of value`},
+	} {
+		t.Run("malformed manifest keeps the loader's message once/"+c.name, func(t *testing.T) {
+			dir := temp(t)
+			root := filepath.Join(dir, "workspace")
+			if err := os.Mkdir(root, 0700); err != nil {
+				t.Fatal(err)
+			}
+			manifest := filepath.Join(dir, "bad.json")
+			write(t, manifest, []byte(c.manifest))
+			message := c.message
+			got := invoke(t, context.Background(), manifest, root, filepath.Join(dir, "report"), nil)
+			if got.code != 2 || got.stderr != "targetcheck: error: invalid_input: "+message+"\n" || got.report == nil || got.report.Failure.Message != message {
+				t.Fatalf("exit %d stderr %q report %+v", got.code, got.stderr, got.report)
+			}
+			// Without any report, the diagnostic still names the run's failure first.
+			got = invoke(t, context.Background(), manifest, root, filepath.Join(root, "report"), nil)
+			want := "targetcheck: error: invalid_input: " + message + "; no report written: failure reports for an invalid manifest must be outside the input workspace\n"
+			if got.code != 2 || got.stderr != want || got.report != nil || got.stdout != "" {
+				t.Fatalf("exit %d stdout %q stderr %q, want %q", got.code, got.stdout, got.stderr, want)
+			}
+		})
+	}
 
 	t.Run("refused destination", func(t *testing.T) {
 		dir := temp(t)

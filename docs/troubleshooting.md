@@ -157,6 +157,11 @@ A manifest error exits 2 before any command runs. Typical messages are:
 
 Compare the manifest with the [reference](usage.md#manifest-reference).
 
+JSON syntax errors include `invalid JSON manifest at byte N`, followed by the
+decoder's explanation. `N` is a one-based byte position in the manifest, not
+a character count; non-ASCII characters can occupy several bytes. Use it to
+locate malformed tokens, missing separators or invalid trailing data.
+
 | Message contains | Fix |
 | --- | --- |
 | `output directory already exists` | choose a new `--output`. TargetCheck never reuses or deletes existing data |

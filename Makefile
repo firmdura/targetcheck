@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 GO ?= go
-VERSION ?= v1.0.0
+VERSION ?= v1.0.1
 DEV_IMAGE ?= targetcheck-dev:go1.27.4
 TEST_CONTAINER_TARGETS ?= verify test-native test-arm demo dist
 DEMO_CONTAINER_TARGETS ?= verify test-native test-arm demo

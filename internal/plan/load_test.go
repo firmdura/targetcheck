@@ -76,6 +76,32 @@ func TestStrictLoad(t *testing.T) {
 	}
 }
 
+func TestJSONSyntaxErrorsReportByteOffsets(t *testing.T) {
+	for name, data := range map[string]string{
+		"first value":      `{"schema_version":!}`,
+		"object key":       `{!}`,
+		"missing colon":    `{"schema_version" !1}`,
+		"missing comma":    `{"schema_version":1 !}`,
+		"multiline":        "{\n  \"schema_version\": 1,\n  \"target\": !\n}",
+		"after UTF-8 text": `{"note":"café","schema_version":!}`,
+		"nested value":     `{"variants":{"baseline":{"build":[!]}}}`,
+		"trailing token":   `{"schema_version":1}!`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			_, err := plan.Load(strings.NewReader(data))
+			var typed *model.RunError
+			var syntax *json.SyntaxError
+			if !errors.As(err, &typed) || typed.Kind != model.ErrorInvalidInput || !errors.As(err, &syntax) {
+				t.Fatalf("expected invalid_input wrapping a JSON syntax error, got %v", err)
+			}
+			want := fmt.Sprintf("invalid JSON manifest at byte %d:", strings.IndexByte(data, '!')+1)
+			if !strings.Contains(typed.Failure.Message, want) {
+				t.Fatalf("diagnostic %q does not contain %q", typed.Failure.Message, want)
+			}
+		})
+	}
+}
+
 func TestSemanticLoadRejections(t *testing.T) {
 	cases := map[string]func(*model.Spec){
 		"unsupported version":       func(s *model.Spec) { s.SchemaVersion = 2 },

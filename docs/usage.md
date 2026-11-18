@@ -60,13 +60,13 @@ source checkout. To use the Go library, see [library.md](library.md).
 
 ### Release archives
 
-The [v1.0.0 release](https://github.com/firmdura/targetcheck/releases/tag/v1.0.0)
+The [v1.0.1 release](https://github.com/firmdura/targetcheck/releases/tag/v1.0.1)
 has one archive per architecture and a `SHA256SUMS` file:
 
 | File | Content |
 | --- | --- |
-| `targetcheck-v1.0.0-linux-amd64.tar.gz` | static CLI for Linux x86-64 |
-| `targetcheck-v1.0.0-linux-arm64.tar.gz` | static CLI for Linux AArch64 |
+| `targetcheck-v1.0.1-linux-amd64.tar.gz` | static CLI for Linux x86-64 |
+| `targetcheck-v1.0.1-linux-arm64.tar.gz` | static CLI for Linux AArch64 |
 | `SHA256SUMS` | SHA-256 of both archives |
 
 These commands download one archive, check it against `SHA256SUMS`, unpack
@@ -74,7 +74,7 @@ it, and then check every unpacked file against the archive's own
 `SHA256SUMS`:
 
 ```sh
-version=v1.0.0
+version=v1.0.1
 arch=amd64 # or arm64
 curl -fLO "https://github.com/firmdura/targetcheck/releases/download/$version/targetcheck-$version-linux-$arch.tar.gz"
 curl -fLO "https://github.com/firmdura/targetcheck/releases/download/$version/SHA256SUMS"
@@ -85,7 +85,7 @@ sha256sum -c SHA256SUMS
 ./targetcheck version
 ```
 
-Every archive holds a single directory, `targetcheck-v1.0.0-linux-ARCH/`,
+Every archive holds a single directory, `targetcheck-v1.0.1-linux-ARCH/`,
 with these files:
 
 | Path | Content |
@@ -103,13 +103,13 @@ Put the directory on your `PATH` with `export PATH="$PWD:$PATH"`, or copy
 
 `targetcheck version` prints the release version, the commit the archive was
 built from and the Go version, for example
-`targetcheck v1.0.0 commit=<40-digit commit> go=go1.27.4`.
+`targetcheck v1.0.1 commit=<40-digit commit> go=go1.27.4`.
 
 Two things to know about the archives:
 
 - The bundled documents link to some repository files that the archive does
   not contain, such as the Wget example. Those links point to the same files
-  at the `v1.0.0` tag on GitHub.
+  at the `v1.0.1` tag on GitHub.
 - The archives are reproducible. `make dist` on the same commit in the pinned
   environment produces byte-identical files. `make dist` also checks this
   itself: it builds everything a second time, from another directory with an
@@ -121,12 +121,12 @@ With Go 1.27.4 or later, this command installs `targetcheck` into
 `$(go env GOPATH)/bin`:
 
 ```sh
-go install github.com/firmdura/targetcheck/cmd/targetcheck@v1.0.0
+go install github.com/firmdura/targetcheck/cmd/targetcheck@v1.0.1
 ```
 
 A module download has no version control metadata, so this build reports
-`targetcheck v1.0.0 commit=unknown go=GOVERSION`. For the library, run
-`go get github.com/firmdura/targetcheck@v1.0.0` and see
+`targetcheck v1.0.1 commit=unknown go=GOVERSION`. For the library, run
+`go get github.com/firmdura/targetcheck@v1.0.1` and see
 [library.md](library.md).
 
 ### Source checkout
@@ -134,12 +134,12 @@ A module download has no version control metadata, so this build reports
 ```sh
 git clone https://github.com/firmdura/targetcheck.git
 cd targetcheck
-git checkout v1.0.0
+git checkout v1.0.1
 go build -o bin/targetcheck ./cmd/targetcheck
 ```
 
 Go stamps such a build with version control information. In a clean checkout
-of the tag, `bin/targetcheck version` reports `v1.0.0` and the commit. A build
+of the tag, `bin/targetcheck version` reports `v1.0.1` and the commit. A build
 from another commit reports a Go pseudo-version, with `+dirty` if there are
 uncommitted changes. A build with `-buildvcs=false`, as the Make targets use,
 reports `dev commit=unknown`.
@@ -751,7 +751,7 @@ releases fix bugs. An incompatible change needs a new major version, with the
 module path `github.com/firmdura/targetcheck/v2`, or a new schema version. The
 [CHANGELOG](../CHANGELOG.md) lists the changes in every release.
 
-- **Schemas.** Manifests must say `schema_version: 1`. v1.0.0 accepts only
+- **Schemas.** Manifests must say `schema_version: 1`. v1.0.1 accepts only
   version 1 and rejects any other value. Reports carry `schema_version: 1`. An
   incompatible change to either format will use a new schema version, and the
   CHANGELOG will describe the migration.

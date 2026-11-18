@@ -16,7 +16,7 @@ expected. It is not a security-fix certification;
 [docs/limitations.md](docs/limitations.md) explains what a result does and
 does not show.
 
-TargetCheck v1.0.0 is a command-line tool and a Go library for Linux amd64 and
+TargetCheck v1.0.1 is a command-line tool and a Go library for Linux amd64 and
 arm64 hosts. Its Go code is licensed under [Apache-2.0](LICENSE).
 
 ## A short example
@@ -86,11 +86,11 @@ The exit status tells you what kind of result you got:
 ## Install
 
 Prebuilt static binaries for Linux amd64 and arm64 are attached to the
-[v1.0.0 release](https://github.com/firmdura/targetcheck/releases/tag/v1.0.0).
+[v1.0.1 release](https://github.com/firmdura/targetcheck/releases/tag/v1.0.1).
 Download one, check it and unpack it:
 
 ```sh
-version=v1.0.0
+version=v1.0.1
 arch=amd64 # or arm64
 curl -fLO "https://github.com/firmdura/targetcheck/releases/download/$version/targetcheck-$version-linux-$arch.tar.gz"
 curl -fLO "https://github.com/firmdura/targetcheck/releases/download/$version/SHA256SUMS"
@@ -109,14 +109,14 @@ also has a `SHA256SUMS` of its own files.
 With Go 1.27.4 or later, you can build the CLI from the module instead:
 
 ```sh
-go install github.com/firmdura/targetcheck/cmd/targetcheck@v1.0.0
+go install github.com/firmdura/targetcheck/cmd/targetcheck@v1.0.1
 ```
 
 To use the library, add the module and import
 `github.com/firmdura/targetcheck/pkg/targetcheck`:
 
 ```sh
-go get github.com/firmdura/targetcheck@v1.0.0
+go get github.com/firmdura/targetcheck@v1.0.1
 ```
 
 The API reference is on
