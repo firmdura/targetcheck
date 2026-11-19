@@ -204,7 +204,7 @@ the example from a macOS or Linux Docker host.
   qualification and out-of-scope claims
 - [docs/example-walkthrough.md](docs/example-walkthrough.md): the Wget case
   step by step
-- Reference: [design and acceptance criteria](docs/design.md),
+- Reference: [design and verification](docs/design.md),
   [component contracts](docs/contracts.md),
   [input validation](docs/input-validation.md),
   [execution](docs/execution.md), [outcomes](docs/outcomes.md),
@@ -213,9 +213,8 @@ the example from a macOS or Linux Docker host.
   JSON schemas
 - [CHANGELOG.md](CHANGELOG.md)
 
-The initial development was tracked in
-[issue #1](https://github.com/firmdura/targetcheck/issues/1) and its linked
-issues. Report problems in the
+The [v1.0.1 verification run](https://github.com/firmdura/targetcheck/actions/runs/44266791697)
+records the release checks. Report problems in the
 [issue tracker](https://github.com/firmdura/targetcheck/issues).
 
 ## Development and acceptance

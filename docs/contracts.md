@@ -15,9 +15,8 @@ share, the schema fixtures and the Linux verification environment. In short:
 - The aggregate outcome follows a fixed precedence and maps to one CLI exit
   code: 0, 1, 2 or 130.
 
-The [design and acceptance criteria](design.md) describe the release scope
-and acceptance criteria; the user guides are linked from the
-[README](../README.md).
+The [design notes](design.md) cover the release scope and verification. The
+[README](../README.md) links the user guides.
 
 Original TargetCheck code is licensed under [Apache-2.0](../LICENSE). Wget-derived
 source, patches and tests belong separately under `examples/wget/`, retain their
@@ -185,9 +184,8 @@ version is the emulator's own statement, not an attestation of its build.
 
 ## Component interfaces
 
-These interfaces are declared in `internal/model`. Separately owned packages may
-provide the same named functions; orchestration can adapt them to interfaces for
-dependency injection and zero-launch preflight tests.
+The interfaces in `internal/model` let tests substitute an executor and check
+that an invalid manifest fails before any command starts.
 
 ```go
 type Planner interface {
@@ -214,17 +212,13 @@ filesystem, process, network or formatting work. Renderers consume the evaluated
 report, write only to the supplied writer, and neither execute commands nor
 recalculate outcomes.
 
-| Owner | Reserved implementation paths |
-| --- | --- |
-| Input planning, #3 | `internal/plan/`, `docs/input-validation.md` |
-| Process execution, #4 | `internal/execute/`, `docs/execution.md` |
-| Evaluation, #5 | `internal/evaluate/`, `docs/outcomes.md` |
-| Rendering, #6 | `internal/render/`, `docs/report-format.md` |
-| API/CLI orchestration, #7 | Public entry-point files, `cmd/targetcheck/`, `internal/cli/`, native integration tests |
-
-Changes to shared model/schema contracts, Makefile and CI have one designated
-owner and are coordinated before downstream callers change. A package must not
-silently introduce a competing wire model.
+| Component | Source | Reference |
+| --- | --- | --- |
+| Input planning | `internal/plan/` | [Input validation](input-validation.md) |
+| Process execution | `internal/execute/` | [Execution](execution.md) |
+| Evaluation | `internal/evaluate/` | [Outcomes](outcomes.md) |
+| Rendering | `internal/render/` | [Report format](report-format.md) |
+| Go API and CLI | `pkg/targetcheck/`, `cmd/targetcheck/`, `internal/cli/` | [Library](library.md) and [CLI usage](usage.md) |
 
 ## Observations, outcomes and reports
 

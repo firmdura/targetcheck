@@ -1,50 +1,79 @@
-# TargetCheck v0.1 design and acceptance criteria
+# TargetCheck design and verification
 
-This document records the v0.1 scope and acceptance criteria that TargetCheck v0.1.0 implements. The [README](../README.md) summarizes the released capabilities and links the user documentation; the [tracking issue](https://github.com/firmdura/targetcheck/issues/1) links the delivery issues and their evidence.
+TargetCheck runs the same component tests against a baseline and a candidate.
+Both use one ordered list of tests. Each build has its own expected outcomes,
+so a known baseline failure can be distinguished from an unexpected candidate
+failure. The report ties each observation to the binary that ran.
 
-## Objective
-Deliver TargetCheck v0.1: a small Go library and CLI that runs the same component regression suite against a baseline and candidate, on Linux natively or with ARM32 QEMU user mode, and emits evidence a firmware engineer can review. The useful claim is whether the declared test expectations were met for the identified binaries. It is not a security-fix certification.
+The host is Linux amd64 or arm64. Tests run natively or on little-endian ARM32
+hard-float binaries under a caller-supplied `qemu-arm` and sysroot. Each run
+compares one pair of builds. The caller supplies the source, trusted build
+commands, test cases, and tools. Firmware deployment, hardware qualification,
+and selecting or backporting security fixes are outside this tool's scope.
+See the [platform and trust limits](limitations.md) and the
+[Apache-2.0 and Wget licensing details](../README.md#license).
 
-## In scope
-- Linux amd64 and arm64 hosts; native execution plus little-endian ARM32 hard-float ELF tests via an explicitly supplied `qemu-arm` executable and sysroot.
-- One baseline and one candidate per invocation. Multiple invocations cover native/ARM or an intentionally incomplete fix.
-- Explicit, trusted build command argument arrays, a shared ordered list of test cases, exact baseline expectations, and candidate success expectations.
-- Strict JSON input, SHA-256 identity for declared source/config/test inputs and tested artifacts, bounded output capture, process cancellation/timeouts, JSON and Markdown reports.
-- Importable Go API, a CLI, a mandatory real upstream-backed Wget 1.21.4 CVE-2026-58470 security/compatibility example, local verification scripts, CI during private development and downloadable release packaging. Small synthetic fixtures may supplement fast unit tests but cannot satisfy release acceptance.
-- Original Go library/CLI code under Apache-2.0. Wget-derived source, patches and tests live separately under `examples/wget/` with the upstream GPL license, notices, source URLs and change attribution preserved; they are never represented as Apache-2.0 code or linked into the Go tool.
+## How a comparison runs
 
-## Out of scope
-Automatic CVE applicability, selecting/downloading/backporting patches, arbitrary remote commands, automatic SDK installation, firmware extraction/build adapters, booting complete images, hardware/driver/update qualification, signing or deploying customer firmware, dashboards, vendor-specific SDKs, external vulnerability services, and Windows/macOS execution. macOS developers use the documented Linux container. No claim that hashes establish trusted provenance or that passing tests proves every attack path is repaired.
+1. **Load the manifest.** A strict JSON manifest declares the target, the
+   baseline and candidate directories, their inputs and artifacts, and the
+   shared tests. Both variants run the same test arguments. Each expectation
+   specifies an exit code and any output markers that must match. A nonzero
+   baseline expectation requires a marker. Candidate tests must exit zero.
+2. **Check both workspaces before launching a command.** TargetCheck resolves
+   tools and paths, rejects invalid declarations, and hashes the manifest and
+   declared inputs. The limits are 1 MiB per manifest, 256 tests, and 64 build
+   steps per variant. Each command has a timeout of 1 to 3600 seconds and
+   separate 1 MiB limits for stdout and stderr.
+3. **Build and test the baseline, then the candidate.** Build commands run on
+   the host. ARM tests use the specified emulator and sysroot. A baseline
+   mismatch still allows the candidate tests to run. A build or infrastructure
+   failure stops the run. The runner hashes each artifact before and after
+   testing. A changed identity is an infrastructure failure.
+4. **Record what ran.** JSON contains the observed arguments, tool paths, file
+   digests, process outcomes, and checks left unrun. Markdown summarizes that
+   record. The CLI writes both reports and per-step logs to a new directory.
+   It exits 0 for a match, 1 for a mismatch, 2 for an input, infrastructure,
+   or output error, and 130 for cancellation.
 
-## Fixed v0.1 contract
-**Library:** module `github.com/firmdura/targetcheck`; public package `pkg/targetcheck`. Provide `Load(io.Reader) (Spec, error)`, `Run(context.Context, Spec, Options) (Report, error)`, `WriteJSON(io.Writer, Report) error`, and `WriteMarkdown(io.Writer, Report) error`. `Options.Root` is an explicit absolute input workspace; `Run` never calls `os.Exit`, changes the caller process working directory, installs tools, downloads files or writes reports. It returns the partial report plus a typed error on invalid input/infrastructure/cancellation; mismatched test expectations are represented in the report without a Go error. User build/test commands are trusted arbitrary programs, not sandboxed by this library.
+The [component contracts](contracts.md) define the manifest and API types,
+validation rules, identity checks, and error precedence. The
+[Go API](library.md) exposes the same comparison and report writers. The
+[report reference](report-format.md) describes the evidence recorded for a
+partial run.
 
-**CLI:** `targetcheck check --manifest FILE --root DIR --output NEW_DIR` writes `report.json`, `report.md` and per-step stdout/stderr files into a newly created output directory; it refuses an existing destination. `targetcheck version` prints version/build information. Exit 0 means every declared expectation matched; 1 means a test expectation mismatched; 2 means invalid input, build/infrastructure failure, timeout, output-limit or report-write failure; 130 means user cancellation. Error precedence is cancellation, then infrastructure, then mismatch, then matched. The CLI prints a concise summary and report paths, never all raw logs. Failure reports preserve completed checks and mark remaining checks `not_run`, never `passed`.
+## Verification
 
-**Spec:** strict JSON `schema_version: 1`, `target`, `variants.baseline`, `variants.candidate`, `test_inputs`, `tests`. `target.kind` is `native` or `qemu-arm`; QEMU requires explicit `executable` and `sysroot`. Each variant has a distinct `cwd` below `Root`, `build` ordered command objects (`argv`, optional `env`, `timeout_seconds`), declared source/config `inputs` paths and `artifacts` paths relative to that cwd. Each shared test has a unique `id`, identical `argv` in both variant directories, `timeout_seconds`, `baseline_expect`, `candidate_expect`. Test executable `argv[0]` must reference a declared artifact. Expectations contain exact `exit_code` and optional literal `stdout_contains`/`stderr_contains`; a nonzero baseline expectation must require a nonempty marker so a missing executable or unrelated crash cannot masquerade as the expected failure. Candidate expectations always require exit 0. Build success always requires exit 0. Commands use argv directly, never an implicit shell; an explicitly supplied shell build command remains a trusted user choice. No variable interpolation in manifest paths/argv. Explicit command env overrides inherited env; reports record only names of overrides, never values or the full environment.
+The [pinned Linux image](../dev/Containerfile) supports local and CI runs.
+[Tool versions and checksums](../dev/tool-versions.txt) identify the Go
+toolchain, native compiler, ARM cross-compiler, sysroot, and QEMU used for
+the reference environment.
 
-**Boundaries:** reject unsupported versions, unknown or duplicate JSON keys, duplicate test IDs, invalid/empty argv, invalid expectations, missing inputs/tools, paths escaping roots, symlinked declared inputs/artifacts, unsupported ELF target and output paths inside variant workspaces before commands run. Cap manifest at 1 MiB, tests at 256, build steps at 64 per variant and captured stdout/stderr at 1 MiB each per command; exceeding output limit terminates that command and reports infrastructure failure. Timeouts must be 1..3600 seconds. Existing workspace data is not deleted or rewritten by TargetCheck itself; configured build programs may write within their declared cwd. No automatic network requests are made by TargetCheck, although trusted user commands can make them.
+| Target | Coverage |
+| --- | --- |
+| `make verify` | Formatting, vet, unit and race tests, package and CLI builds |
+| `make test-native` | Native process and CLI integration tests |
+| `make test-arm` | Cross-built ARM32 binaries under QEMU. A missing emulator or toolchain fails the target. |
+| `make demo` | Native and ARM32 results for the Wget example |
+| `make dist` | Linux amd64 and arm64 release archives and SHA-256 checksums |
 
-**Execution and identity:** preflight both variants and inputs first; execute baseline build/tests, then candidate build/tests. A baseline test mismatch still permits candidate tests; any infrastructure/build failure stops subsequent execution. Build commands run on the host. ARM tests execute as `qemu-arm -L SYSROOT ARTIFACT ARGS...`; native tests execute ARTIFACT directly. Record schema/tool version, target, exact argv and cwd relative to Root, input and manifest digests, artifact digests immediately before and after testing, exit/signal/error classification and captured output. Changed artifact digest is infrastructure failure. Missing or skipped checks can never satisfy expectations. Digests cover declared files only. Reports record the resolved paths of build tools, the QEMU executable and the sysroot, and the QEMU version from one `--version` query after preflight; build tool and sysroot versions are not queried and carry an explicit `version_error` (declare a build step such as `gcc --version` to keep a toolchain version in the evidence). None of this attests the full environment. Reports use stable ordering and relative workspace paths; output content varies only with actual observations. JSON is authoritative; Markdown is derived and escapes untrusted strings.
+`make prepare-demo` downloads the pinned Wget source and verifies its SHA-256
+before extraction. After preparation, `make test-container` runs the suite
+with networking disabled. The [v1.0.1 release notes](https://github.com/firmdura/targetcheck/releases/tag/v1.0.1)
+link the CI run and record the checksum comparison between local arm64-host
+and CI amd64-host builds.
 
-## Local acceptance
-The repository must supply working targets: `make verify` for formatting, vet, unit/race tests and package/CLI compilation; `make test-native` for real native command/process integration; `make test-arm` for actual cross-built ARM32 binaries executed by QEMU; `make demo` for the mandatory real Wget native/ARM scenario matrix; `make dist` for Linux amd64/arm64 archives and checksums. Missing QEMU/toolchain is an actionable failure in `test-arm`, not a silent skip or mock pass. `make verify` needs no network after dependencies are fetched. `make prepare-demo` explicitly fetches the pinned public Wget source and checks its expected SHA-256 before extraction; it may use the network. `make demo` runs offline once that explicit preparation and the documented environment setup are complete. TargetCheck runtime never fetches source or tools itself.
+The Wget example recorded a native sanitizer failure in the baseline. The
+first upstream fix passed the large-offset tests natively and failed the
+same subset under ARM32 QEMU. The candidate with the follow-up changes passed
+the scoped tests on both. The [results](example-walkthrough.md#expected-results)
+and [known limits](limitations.md#the-wget-cve-2026-58470-example) describe
+the tested cases and the remaining limitation.
 
-Pin the exact current supported Go stable toolchain after checking the official Go download page at foundation time. Provide an exact digest-pinned Linux build/test container and package/tool version record. `make test-container` runs the full local acceptance suite, including the real Wget native/ARM scenario matrix, in that environment from a clean checkout after explicit source preparation, including on macOS with Docker. Container setup may require an explicit network-enabled build; the actual verification run uses `--network=none`. CI must invoke the same local commands and is supporting evidence, not a substitute for executing them locally.
+## References
 
-## User documentation
-Document installation from the final public release and Go module/source; supported hosts and ARM ABI; complete manifest/API references and examples; library error handling and cancellation; exact exit/status meanings; prerequisites and explicit environment setup; native and ARM quickstarts; how to provide one's own build/test commands and expected baseline failure; artifact identity limits; output/log sensitivity; why the tool is not a sandbox; troubleshooting missing tool/sysroot, dynamic loader, permission, timeout and failed build; distinction between emulator component tests and physical-product qualification. Every documented command must run against committed examples. README must label v0.1 capabilities truthfully and link the design and remaining work.
-
-## Completion and review
-Release acceptance requires focused evidence for every component. For release acceptance, a fresh clone must be able to execute the full local suite in the pinned container, reproduce the real Wget baseline signed-overflow defect under native UBSan, the first upstream fix's 32-bit large-offset regression under actual ARM32 QEMU, and the complete scoped repair passing shared boundary/compatibility tests natively and on ARM. The first-fix compatibility subset must pass natively and fail on ARM. Demonstrate that a failing candidate and a missing tool produce different nonzero exits. Synthetic fixtures alone do not complete this objective. Linux archives include the CLI, license, concise docs and checksums. Keep the repository private during development. After final acceptance and publication-content checks, publish the verified `v0.1.0` tag/release and Apache-2.0 Go module by making the repository public. Request pkg.go.dev indexing through the official Go module workflow and verify that the package documentation and version are available; a request alone is not completion. External announcements remain out of scope. Final review checks manifest -> preflight -> process -> identity -> evaluation -> JSON/Markdown/exit-code consistency, confirms no infrastructure failure is rendered as a verified fix, and verifies the library and documented CLI against the same semantics, release archives/checksums and observed pkg.go.dev availability.
-
-## Design references
-- QEMU user-mode execution: https://www.qemu.org/docs/master/user/main.html
-- Linux backport verification guidance: https://docs.kernel.org/process/backporting.html
-- Go download/toolchain selection: https://go.dev/dl/
-- Go module publication/indexing: https://pkg.go.dev/about#adding-a-package and https://proxy.golang.org/ .
-- Advisory reference to verify while implementing the real case: https://ubuntu.com/security/CVE-2026-58470 .
-- Mandatory Wget source: https://ftp.gnu.org/gnu/wget/wget-1.21.4.tar.gz ; expected SHA-256 `81542f5cefb8faacc39bbbc6c82ded80e3e4a88505ae72ea51df27525bcde04c`.
-- Upstream security fix: https://gitlab.com/gnuwget/wget/-/commit/43d3ba9336bc94937e6fae2365c6ffd30c34ffcf ; 32-bit follow-up: https://gitlab.com/gnuwget/wget/-/commit/01ff771caac1958662ca8665eed2021ec386a7af . Preserve their authorship and map any required 1.21.4 backport adaptations explicitly.
-- The local prior investigation identifies an additional range-endpoint guard and shared boundary tests. Reimplement/adapt only those technical changes into a self-contained GPL-labelled recipe, separately attributed as local additions pending upstream review. Never copy outreach, customer image data, vendor SDK assumptions or hardware-qualification claims.
-
+- [QEMU user-mode execution](https://www.qemu.org/docs/master/user/main.html)
+- [Linux backport verification](https://docs.kernel.org/process/backporting.html)
+- [Ubuntu advisory for the Wget example](https://ubuntu.com/security/CVE-2026-58470)
+- [GNU Wget 1.21.4 source](https://ftp.gnu.org/gnu/wget/wget-1.21.4.tar.gz), SHA-256 `81542f5cefb8faacc39bbbc6c82ded80e3e4a88505ae72ea51df27525bcde04c`
+- [First upstream change](https://gitlab.com/gnuwget/wget/-/commit/43d3ba9336bc94937e6fae2365c6ffd30c34ffcf), [32-bit follow-up](https://gitlab.com/gnuwget/wget/-/commit/01ff771caac1958662ca8665eed2021ec386a7af), and [upstream credits and local changes](../examples/wget/NOTICE)
